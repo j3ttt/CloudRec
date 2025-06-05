@@ -18,6 +18,7 @@ package oss
 import (
 	"context"
 	"encoding/json"
+
 	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss"
 	"github.com/cloudrec/alicloud/collector"
 	"github.com/core-sdk/constant"
@@ -49,7 +50,7 @@ func GetBucketResource() schema.Resource {
 			ResourceId:   "$.BucketProperties.Name",
 			ResourceName: "$.BucketProperties.Name",
 		},
-		Dimension: schema.Global,
+		Dimension: schema.Regional,
 	}
 }
 
@@ -69,17 +70,24 @@ func GetInstanceDetail(ctx context.Context, service schema.ServiceInterface, res
 		}
 
 		// Print the objects found
-		for _, obj := range page.Buckets {
+		for _, bucket := range page.Buckets {
+
+			// Since ListBuckets returns all buckets in regions,
+			// skip the region that doesn't match.
+			if *bucket.Region != *service.(*collector.Services).Config.RegionId {
+				continue
+			}
+
 			d := &BucketDetail{
-				BucketProperties:       &obj,
-				BucketInfo:             getBucketInfo(ctx, cli, obj.Name),
-				LoggingEnabled:         getBucketLogging(ctx, cli, obj.Name),
-				BucketPolicy:           getBucketPolicy(ctx, cli, obj.Name),
-				SSEDefaultRule:         getBucketEncryption(ctx, cli, obj.Name),
-				VersioningConfig:       getBucketVersioning(ctx, cli, obj.Name),
-				RefererConfiguration:   getBucketReferer(ctx, cli, obj.Name),
-				CORSConfiguration:      getBucketCORS(ctx, cli, obj.Name),
-				InventoryConfiguration: listBucketInventory(ctx, cli, obj.Name),
+				BucketProperties:       &bucket,
+				BucketInfo:             getBucketInfo(ctx, cli, bucket.Name),
+				LoggingEnabled:         getBucketLogging(ctx, cli, bucket.Name),
+				BucketPolicy:           getBucketPolicy(ctx, cli, bucket.Name),
+				SSEDefaultRule:         getBucketEncryption(ctx, cli, bucket.Name),
+				VersioningConfig:       getBucketVersioning(ctx, cli, bucket.Name),
+				RefererConfiguration:   getBucketReferer(ctx, cli, bucket.Name),
+				CORSConfiguration:      getBucketCORS(ctx, cli, bucket.Name),
+				InventoryConfiguration: listBucketInventory(ctx, cli, bucket.Name),
 			}
 			res <- d
 		}
