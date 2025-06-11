@@ -2,9 +2,9 @@ name: Docker Image CI
 
 on:
   push:
-    branches: [ "docker-image-action" ]
+    branches: [ "main" ]
   pull_request:
-    branches: [ "docker-image-action" ]
+    branches: [ "main" ]
 
 jobs:
 
@@ -32,7 +32,6 @@ jobs:
         tags: |
           type=raw,value=latest,enable={{is_default_branch}}
           type=ref,enable=true,priority=600,prefix=,suffix=,event=tag
-          ${{ env.IMAGE_NAME }}:${{ github.sha }}
           
     - name: Build and push Docker images
       uses: docker/build-push-action@v6.18.0
