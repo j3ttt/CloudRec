@@ -13,10 +13,10 @@ risk if {
 }
 
 isEnforcedPublicAccessPrevention if {
-    input.Item.iamConfiguration.publicAccessPrevention == "enforced"
+    input.Bucket.iamConfiguration.publicAccessPrevention == "enforced"
 }
 isBucketLevelAccessEnabled if {
-    input.Item.iamConfiguration.uniformBucketLevelAccess.enabled == true
+    input.Bucket.iamConfiguration.uniformBucketLevelAccess.enabled == true
 }
 
 unrestrictedPrincipal := {"allUsers", "allAuthenticatedUsers"}
@@ -25,6 +25,6 @@ iamPolicyWithUnrestrictedPrincipal if {
     unrestrictedPrincipal[binding.members[_]]
 }
 bucketAclWithUnrestrictedPrincipal if {
-    some acl in input.Item.acl
+    some acl in input.Bucket.acl
     unrestrictedPrincipal[acl.entity]
 }

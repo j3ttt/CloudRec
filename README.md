@@ -120,6 +120,11 @@ security_groups_misconfig contains sg_rule if {
 
 To check detailed guidelines for new contributions, please refer (https://docs.cloudrec.cloud/ContributionGuide/ContributionStep.html)
 
+## Contributors Wall
+<a href="https://github.com/antgroup/CloudRec/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=antgroup/CloudRec&max=200" />
+</a>
+
 # **<font style="color:rgb(38, 38, 38);">📬</font>** Community
 
 [https://discord.gg/WpWT9Q8BkD](https://discord.gg/WpWT9Q8BkD)

@@ -16,13 +16,15 @@
 package slb
 
 import (
-	"context"
-	slb20140515 "github.com/alibabacloud-go/slb-20140515/v4/client"
-	"github.com/alibabacloud-go/tea/tea"
-	"github.com/cloudrec/alicloud/collector"
 	"github.com/core-sdk/constant"
 	"github.com/core-sdk/log"
 	"github.com/core-sdk/schema"
+	"context"
+	slb20140515 "github.com/alibabacloud-go/slb-20140515/v4/client"
+	"github.com/alibabacloud-go/tea/tea"
+	"github.com/aliyun/alibaba-cloud-sdk-go/sdk/requests"
+	"github.com/aliyun/alibaba-cloud-sdk-go/services/vpc"
+	"github.com/cloudrec/alicloud/collector"
 	"go.uber.org/zap"
 	"net"
 	"time"
@@ -40,6 +42,43 @@ func GetSLBResource() schema.Resource {
 			ResourceName: "$.LoadBalancer.LoadBalancerName",
 			Address:      "$.LoadBalancer.Address",
 		},
+		Regions: []string{
+			"cn-qingdao",
+			"cn-beijing",
+			"cn-zhangjiakou",
+			"cn-huhehaote",
+			"cn-wulanchabu",
+			"cn-hangzhou",
+			"cn-shanghai",
+			"cn-nanjing",
+			"cn-fuzhou",
+			"cn-shenzhen",
+			"cn-heyuan",
+			"cn-guangzhou",
+			"cn-wuhan-lr",
+			"ap-southeast-6",
+			"ap-northeast-2",
+			"ap-southeast-3",
+			"ap-northeast-1",
+			"ap-southeast-7",
+			"cn-chengdu",
+			"ap-southeast-1",
+			"ap-southeast-5",
+			"cn-zhengzhou-jva",
+			"cn-hongkong",
+			"eu-central-1",
+			"us-east-1",
+			"us-west-1",
+			"na-south-1",
+			"eu-west-1",
+			"me-east-1",
+			"me-central-1",
+			"cn-beijing-finance-1",
+			"cn-hangzhou-finance",
+			"cn-shanghai-finance-1",
+			"cn-shenzhen-finance-1",
+			"cn-heyuan-acdr-1",
+		},
 		Dimension: schema.Regional,
 	}
 }
@@ -51,6 +90,8 @@ type Detail struct {
 	// detailed attribute
 	LoadBalancerAttribute *slb20140515.DescribeLoadBalancerAttributeResponseBody
 	Listeners             []*ListenerDetail
+
+	EipAddress []vpc.EipAddress
 }
 
 type ListenerDetail struct {
@@ -59,9 +100,9 @@ type ListenerDetail struct {
 }
 
 func GetInstanceDetail(ctx context.Context, service schema.ServiceInterface, res chan<- any) error {
-	sve := service.(*collector.Services)
-	config := sve.Config
-	cli := sve.SLB
+	svc := service.(*collector.Services)
+	config := svc.Config
+	cli := svc.SLB
 	cli.RegionId = config.RegionId
 	isSpeedEndpoint := false
 	req := &slb20140515.DescribeLoadBalancersRequest{}
@@ -87,6 +128,7 @@ func GetInstanceDetail(ctx context.Context, service schema.ServiceInterface, res
 				LoadBalancer:          lb,
 				LoadBalancerAttribute: describeLoadBalancerAttribute(ctx, cli, lb.LoadBalancerId),
 				Listeners:             listListeners(ctx, cli, lb.LoadBalancerId),
+				EipAddress:            describeEipAddress(ctx, svc, lb.LoadBalancerId),
 			}
 			res <- d
 		}
@@ -101,6 +143,19 @@ func GetInstanceDetail(ctx context.Context, service schema.ServiceInterface, res
 }
 
 var slbSpeedEndpoint = "slb.aliyuncs.com"
+
+func describeEipAddress(ctx context.Context, svc schema.ServiceInterface, id *string) []vpc.EipAddress {
+	req := vpc.CreateDescribeEipAddressesRequest()
+	req.PageSize = requests.NewInteger(50)
+	req.PageNumber = requests.NewInteger(1)
+	req.AssociatedInstanceId = *id
+	resp, err := svc.(*collector.Services).VPC.DescribeEipAddresses(req)
+	if err != nil {
+		log.CtxLogger(ctx).Error("DescribeEipAddresses error", zap.Error(err))
+		return nil
+	}
+	return resp.EipAddresses.EipAddress
+}
 
 func describeLoadBalancerAttribute(ctx context.Context, cli *slb20140515.Client, loadBalancerId *string) (Body *slb20140515.DescribeLoadBalancerAttributeResponseBody) {
 	req := &slb20140515.DescribeLoadBalancerAttributeRequest{}

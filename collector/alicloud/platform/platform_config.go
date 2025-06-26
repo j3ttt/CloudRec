@@ -59,6 +59,7 @@ import (
 	"github.com/cloudrec/alicloud/collector/pl"
 	"github.com/cloudrec/alicloud/collector/ram"
 	"github.com/cloudrec/alicloud/collector/redis"
+	"github.com/cloudrec/alicloud/collector/resourcecenter"
 	"github.com/cloudrec/alicloud/collector/rocketmq"
 	"github.com/cloudrec/alicloud/collector/sls"
 	"github.com/cloudrec/alicloud/collector/tablestore"
@@ -115,6 +116,7 @@ func GetPlatformConfig() *schema.Platform {
 	return schema.GetInstance(schema.PlatformConfig{
 		Name: string(constant.AlibabaCloud),
 		Resources: []schema.Resource{
+			resourcecenter.GeCloudCenterResource(),
 			ddos.GetDDoSBGPResource(),
 			cloudfw.GetCloudFWConfigResource(),
 			cloudcenter.GetSasConfigResource(),

@@ -68,14 +68,14 @@ fi
 tar -czvf "${DEPLOY_DIR}/deploy_hws.tar.gz" -C "${DEPLOY_DIR}/../hws" deploy_hws
 
 # Build hws-private deployment directory
-#echo "Building hws-private deployment..."
-#if ! (cd "${DEPLOY_DIR}/../hws/deploy_hws_private" && ./build.sh); then
-#    echo "Error: hws-private build failed"
-#    exit 1
-#fi
+echo "Building hws-private deployment..."
+if ! (cd "${DEPLOY_DIR}/../hws/deploy_hws_private" && ./build.sh); then
+    echo "Error: hws-private build failed"
+    exit 1
+fi
 
 # Compress hws-private deployment directory
-#tar -czvf "${DEPLOY_DIR}/deploy_hws_private.tar.gz" -C "${DEPLOY_DIR}/../hws" deploy_hws_private
+tar -czvf "${DEPLOY_DIR}/deploy_hws_private.tar.gz" -C "${DEPLOY_DIR}/../hws" deploy_hws_private
 
 # Build tencent deployment directory
 echo "Building tencent deployment..."
@@ -86,6 +86,16 @@ fi
 
 # Compress tencent deployment directory
 tar -czvf "${DEPLOY_DIR}/deploy_tencent.tar.gz" -C "${DEPLOY_DIR}/../tencent" deploy_tencent
+
+# Build ksyun deployment directory
+echo "Building ksyun deployment..."
+if ! (cd "${DEPLOY_DIR}/../ksyun/deploy_ksyun" && ./build.sh); then
+    echo "Error: ksyun build failed"
+    exit 1
+fi
+
+# Compress ksyun deployment directory
+tar -czvf "${DEPLOY_DIR}/deploy_ksyun.tar.gz" -C "${DEPLOY_DIR}/../ksyun" deploy_ksyun
 
 # Build cloudrec deployment directory
 echo "Building cloudrec deployment..."

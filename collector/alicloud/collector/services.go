@@ -17,6 +17,7 @@ package collector
 
 import (
 	"context"
+	resourcecenter20221201 "github.com/alibabacloud-go/resourcecenter-20221201/client"
 	"github.com/aliyun/alibaba-cloud-sdk-go/services/ens"
 	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss"
 	ossCredentials "github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss/credentials"
@@ -163,12 +164,20 @@ type Services struct {
 	YUNDUN          *yundun_bastionhost20191209.Client
 	DDoS            *ddoscoo20200101.Client
 	APIG            *apig20240327.Client
+	ResourceCenter  *resourcecenter20221201.Client
+}
+
+// Clone creates a new instance of Services with copied configuration
+func (s *Services) Clone() schema.ServiceInterface {
+	return &Services{}
 }
 
 func (s *Services) InitServices(cloudAccountParam schema.CloudAccountParam) (err error) {
 	param := cloudAccountParam.CommonCloudAccountParam
 	s.CloudAccountId = cloudAccountParam.CloudAccountId
 	s.Config = openapiConfig(param.Region, param.AK, param.SK)
+	s.Config.ConnectTimeout = tea.Int(10000)
+	s.Config.ReadTimeout = tea.Int(20000)
 
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, constant.CloudAccountId, cloudAccountParam.CloudAccountId)
@@ -181,7 +190,7 @@ func (s *Services) InitServices(cloudAccountParam schema.CloudAccountParam) (err
 		if err != nil {
 			log.CtxLogger(ctx).Warn("init ecs client failed", zap.Error(err))
 		}
-	case VPC:
+	case VPC, NAT, EIP:
 		s.VPC, err = vpc.NewClientWithAccessKey(param.Region, param.AK, param.SK)
 		if err != nil {
 			log.CtxLogger(ctx).Warn("init vpc client failed", zap.Error(err))
@@ -195,6 +204,10 @@ func (s *Services) InitServices(cloudAccountParam schema.CloudAccountParam) (err
 		s.SLB, err = createSlbClient(param.Region, s.Config)
 		if err != nil {
 			log.CtxLogger(ctx).Warn("init slb client failed", zap.Error(err))
+		}
+		s.VPC, err = createVPCClient(param.Region, s.Config)
+		if err != nil {
+			log.CtxLogger(ctx).Warn("init vpc client failed", zap.Error(err))
 		}
 	case RAMUser, RAMRole, RMAGroup:
 		s.RAM, err = ram.NewClientWithAccessKey(param.Region, param.AK, param.SK)
@@ -416,9 +429,19 @@ func (s *Services) InitServices(cloudAccountParam schema.CloudAccountParam) (err
 		if err != nil {
 			log.CtxLogger(ctx).Warn("init apig client failed", zap.Error(err))
 		}
+	case ResourceCenter:
+		s.ResourceCenter, err = createResourceClient(param.Region, s.Config)
+		if err != nil {
+			log.CtxLogger(ctx).Warn("init resourcecenter client failed", zap.Error(err))
+		}
 	}
 
 	return nil
+}
+
+func createVPCClient(region string, config *openapi.Config) (client *vpc.Client, err error) {
+	client, err = vpc.NewClientWithAccessKey(region, *config.AccessKeyId, *config.AccessKeySecret)
+	return client, err
 }
 
 func createENSClient(config *openapi.Config) (client *ens.Client, err error) {
@@ -946,6 +969,17 @@ func createDDoSBGPClient(regionId string, config *openapi.Config) (_result *ddos
 	config.Endpoint = tea.String("ddoscoo." + regionId + ".aliyuncs.com")
 	_result = &ddoscoo20200101.Client{}
 	_result, _err = ddoscoo20200101.NewClient(config)
+	_result.RegionId = tea.String(regionId)
+	return _result, _err
+}
+
+func createResourceClient(regionId string, config *openapi.Config) (_result *resourcecenter20221201.Client, err error) {
+	if regionId == "ap-southeast-1" {
+		config.Endpoint = tea.String("resourcecenter-intl.aliyuncs.com")
+	} else {
+		config.Endpoint = tea.String("resourcecenter.aliyuncs.com")
+	}
+	_result, _err := resourcecenter20221201.NewClient(config)
 	_result.RegionId = tea.String(regionId)
 	return _result, _err
 }

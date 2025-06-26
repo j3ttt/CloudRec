@@ -7,5 +7,5 @@ risk if {
 }
 
 isBucketLevelAccessEnabled if {
-    input.Item.iamConfiguration.uniformBucketLevelAccess.enabled == true
+    input.Bucket.iamConfiguration.uniformBucketLevelAccess.enabled == true
 }

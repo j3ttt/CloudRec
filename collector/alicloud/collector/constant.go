@@ -77,4 +77,5 @@ const (
 	DdosCoo              = "DdosCoo"
 	Yundun               = "Yundun"
 	APIG                 = "APIG"
+	ResourceCenter       = "ResourceCenter"
 )

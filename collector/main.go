@@ -20,6 +20,7 @@ import (
 	aws "github.com/cloudrec/aws/platform"
 	baidu "github.com/cloudrec/baidu/platform"
 	hws "github.com/cloudrec/hws/platform"
+	ksyun "github.com/cloudrec/ksyun/platform"
 	tencentcloud "github.com/cloudrec/tencent/platform"
 	"github.com/core-sdk/schema"
 )
@@ -34,7 +35,9 @@ func main() {
 		aws.GetPlatformConfig(),
 		tencentcloud.GetPlatformConfig(),
 		baidu.GetPlatformConfig(),
+		ksyun.GetPlatformConfig(),
 		// [7] ADD_NEW_CLOUD : Add new cloud provider config
-		//template.GetPlatformConfig(),
+		// template.GetPlatformConfig(),
+
 	)
 }

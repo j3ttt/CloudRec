@@ -22,10 +22,10 @@ risk if {
 }
 
 isEnforcedPublicAccessPrevention if {
-    input.Item.iamConfiguration.publicAccessPrevention == "enforced"
+    input.Bucket.iamConfiguration.publicAccessPrevention == "enforced"
 }
 isBucketLevelAccessEnabled if {
-    input.Item.iamConfiguration.uniformBucketLevelAccess.enabled == true
+    input.Bucket.iamConfiguration.uniformBucketLevelAccess.enabled == true
 }
 
 unrestrictedPrincipal := {"allUsers", "allAuthenticatedUsers"}
@@ -41,11 +41,11 @@ managedFolderIamPolicyWithUnrestrictedPrincipal if {
 }
 
 bucketAclWithUnrestrictedPrincipal if {
-    some acl in input.Item.acl
+    some acl in input.Bucket.acl
     unrestrictedPrincipal[acl.entity]
 }
 
 defaultObjectAclWithUnrestrictedPrincipal if {
-    some acl in input.Item.defaultObjectAcl
+    some acl in input.Bucket.defaultObjectAcl
     unrestrictedPrincipal[acl.entity]
 }

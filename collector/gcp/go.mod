@@ -10,6 +10,7 @@ require (
 	cloud.google.com/go/resourcemanager v1.10.2
 	github.com/core-sdk v0.0.0-00010101000000-000000000000
 	github.com/turbot/go-kit v0.9.0
+	github.com/yalp/jsonpath v0.0.0-20180802001716-5cc68e5049a0
 	go.uber.org/zap v1.27.0
 	google.golang.org/api v0.214.0
 )
@@ -46,7 +47,6 @@ require (
 	github.com/spf13/viper v1.19.0 // indirect
 	github.com/stretchr/testify v1.10.0 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
-	github.com/yalp/jsonpath v0.0.0-20180802001716-5cc68e5049a0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.54.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.54.0 // indirect
 	go.opentelemetry.io/otel v1.29.0 // indirect
