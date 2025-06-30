@@ -80,7 +80,7 @@ func GetDetail(ctx context.Context, service schema.ServiceInterface, res chan<- 
 	}
 
 	res <- &Detail{
-		Columns:    columns,
+		Coluns:     columns,
 		Rows:       rows,
 		ResourceId: log.GetCloudAccountId(ctx) + "-" + tea.StringValue(cli.RegionId),
 	}
@@ -89,7 +89,8 @@ func GetDetail(ctx context.Context, service schema.ServiceInterface, res chan<- 
 }
 
 type Detail struct {
-	Columns    []*resourcecenter20221201.ExecuteSQLQueryResponseBodyColumns
+	Coluns     []*resourcecenter20221201.ExecuteSQLQueryResponseBodyColumns
 	Rows       []interface{}
 	ResourceId string
+	loggging   string
 }
