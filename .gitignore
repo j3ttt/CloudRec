@@ -35,3 +35,5 @@ build/
 .vscode/
 .cloudide
 .git/**
+/app/bootstrap/src/main/resources/config/application-test.properties
+

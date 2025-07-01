@@ -19,6 +19,9 @@ target/
 *.iml
 *.ipr
 
+### Application Properties ###
+src/main/resources/config/application-test.properties
+
 ### NetBeans ###
 /nbproject/private/
 /nbbuild/

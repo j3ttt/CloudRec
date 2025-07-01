@@ -31,7 +31,6 @@ func main() {
 	schema.RunExecutors(
 		alicloud.GetPlatformConfig(),
 		hws.GetPlatformConfig(),
-		hws.GetPrivatePlatformConfig(),
 		aws.GetPlatformConfig(),
 		tencentcloud.GetPlatformConfig(),
 		baidu.GetPlatformConfig(),

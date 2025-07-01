@@ -247,7 +247,7 @@ func (p *Platform) handleResource(account CloudAccount, resource Resource, colle
 		regionService := p.getRegionService(region, resource.ResourceType, account.CloudAccountId)
 		err := regionService.InitServices(param)
 		if err != nil {
-			errorMsg := fmt.Sprintf("Code:[%s] Running CloudAccountId => [%s] Region => [%s] Platform => [%s] ResourceType => [%s] Init Client error", CollectorError, account.CloudAccountId, region, p.Name, resource.ResourceType)
+			errorMsg := fmt.Sprintf("Code:[%s] Running CloudAccountId => [%s] Region => [%s] Platform => [%s] ResourceType => [%s] Init Client error %v", CollectorError, account.CloudAccountId, region, p.Name, resource.ResourceType, err)
 			log.GetWLogger().Warn(errorMsg)
 			collectorParam.CloudRecLogger.logAccountError(account.Platform, resource.ResourceType, account.CloudAccountId, account.CollectRecordId, errors.New(errorMsg))
 			continue

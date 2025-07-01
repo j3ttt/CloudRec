@@ -1,13 +1,13 @@
 package test
 
 import (
-	"github.com/core-sdk/constant"
-	"github.com/core-sdk/log"
-	"github.com/core-sdk/schema"
 	"context"
 	"fmt"
 	apig20240327 "github.com/alibabacloud-go/apig-20240327/v3/client"
 	"github.com/cloudrec/alicloud/collector"
+	"github.com/core-sdk/constant"
+	"github.com/core-sdk/log"
+	"github.com/core-sdk/schema"
 	"go.uber.org/zap"
 )
 
@@ -66,7 +66,7 @@ func ListApigDomains(ctx context.Context, service schema.ServiceInterface, res c
 		}
 		response, err := cli.ListDomains(req)
 		if err != nil {
-			log.CtxLogger(ctx).Warn("APIG domain ListDomainsRequest error: %s", zap.Error(err))
+			log.CtxLogger(ctx).Warn("APIG domain ListDomainsRequest error", zap.Error(err))
 			return err
 		}
 		if len(response.Body.Data.Items) == 0 {
@@ -97,7 +97,7 @@ func GetDomain(ctx context.Context, cli *apig20240327.Client, domainId *string) 
 	req := &apig20240327.GetDomainRequest{}
 	resp, err := cli.GetDomain(domainId, req)
 	if err != nil {
-		log.CtxLogger(ctx).Warn("APIG domain GetDomain error: %s", zap.Error(err))
+		log.CtxLogger(ctx).Warn("APIG domain GetDomain error", zap.Error(err))
 		return nil
 	}
 	return resp.Body.Data

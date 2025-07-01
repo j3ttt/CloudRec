@@ -61,7 +61,6 @@ import (
 	"github.com/cloudrec/alicloud/collector/redis"
 	"github.com/cloudrec/alicloud/collector/resourcecenter"
 	"github.com/cloudrec/alicloud/collector/rocketmq"
-	"github.com/cloudrec/alicloud/collector/sls"
 	"github.com/cloudrec/alicloud/collector/tablestore"
 	"github.com/cloudrec/alicloud/collector/vpc"
 	"github.com/cloudrec/alicloud/collector/vpc/eip"
@@ -156,7 +155,7 @@ func GetPlatformConfig() *schema.Platform {
 			oceanbase.GetOceanbaseResource(),
 			polardb.GetPolarDBResource(),
 			acr.GetCRResource(),
-			sls.GetSLSResource(),
+			//sls.GetSLSResource(),
 			cen.GetCENResource(),
 			pl.GetPrivateLinkResource(),
 			dns.GetDNSResource(),

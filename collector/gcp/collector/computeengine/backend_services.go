@@ -16,12 +16,12 @@
 package computeengine
 
 import (
-	"github.com/core-sdk/constant"
-	"github.com/core-sdk/log"
-	"github.com/core-sdk/schema"
 	"context"
 	"github.com/cloudrec/gcp/collector"
 	"github.com/cloudrec/gcp/utils"
+	"github.com/core-sdk/constant"
+	"github.com/core-sdk/log"
+	"github.com/core-sdk/schema"
 	"github.com/turbot/go-kit/types"
 	"go.uber.org/zap"
 	"google.golang.org/api/compute/v1"
@@ -79,7 +79,7 @@ func getSecurityPolicies(ctx context.Context, svc *collector.Services, project s
 
 	resp, err := svc.ComputeService.SecurityPolicies.Get(project, securityPolicy).Do()
 	if err != nil {
-		log.CtxLogger(ctx).Warn("getSecurityPolicies error: %s", zap.Error(err))
+		log.CtxLogger(ctx).Warn("getSecurityPolicies error", zap.Error(err))
 		return
 	}
 	return resp

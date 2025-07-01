@@ -17,6 +17,7 @@ package resourcecenter
 
 import (
 	"context"
+
 	resourcecenter20221201 "github.com/alibabacloud-go/resourcecenter-20221201/client"
 	"github.com/alibabacloud-go/tea/tea"
 	"github.com/cloudrec/alicloud/collector"
@@ -54,6 +55,7 @@ func GetDetail(ctx context.Context, service schema.ServiceInterface, res chan<- 
 		MaxResults: tea.Int32(100),
 	}
 
+	var columns []*resourcecenter20221201.ExecuteSQLQueryResponseBodyColumns
 	var rows []interface{}
 	for {
 		resp, err := cli.ExecuteSQLQuery(request)
@@ -65,13 +67,20 @@ func GetDetail(ctx context.Context, service schema.ServiceInterface, res chan<- 
 		rows = append(rows, resp.Body.Rows...)
 
 		if tea.StringValue(resp.Body.NextToken) == "" {
+			columns = resp.Body.Columns
 			break
 		}
 
 		request.NextToken = resp.Body.NextToken
 	}
 
+	if len(rows) == 0 {
+		log.CtxLogger(ctx).Warn("Resource center query result is empty")
+		return nil
+	}
+
 	res <- &Detail{
+		Columns:    columns,
 		Rows:       rows,
 		ResourceId: log.GetCloudAccountId(ctx) + "-" + tea.StringValue(cli.RegionId),
 	}
@@ -80,6 +89,7 @@ func GetDetail(ctx context.Context, service schema.ServiceInterface, res chan<- 
 }
 
 type Detail struct {
+	Columns    []*resourcecenter20221201.ExecuteSQLQueryResponseBodyColumns
 	Rows       []interface{}
 	ResourceId string
 }

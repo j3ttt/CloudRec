@@ -437,11 +437,14 @@
             #{id}
         </foreach>
     </update>
-    <update id="preDeleteByCloudAccountId">
+    <update id="preDeleteByIdList">
         UPDATE cloud_resource_instance_v1
-        SET deleted_at = NOW(),
-            del_num    = del_num + 1
-        WHERE cloud_account_id = #{cloudAccountId}
+        SET deleted_at =#{deleteAt},
+        del_num = del_num + 1
+        WHERE id IN
+        <foreach collection="idList" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
     </update>
     <delete id="commitDeleteByCloudAccountId">
         DELETE

@@ -22,6 +22,7 @@ import com.alipay.dao.dto.ResourceDTO;
 import com.alipay.dao.po.CloudResourceInstancePO;
 import org.apache.ibatis.annotations.Param;
 
+import java.util.Date;
 import java.util.List;
 
 public interface CloudResourceInstanceMapper {
@@ -50,7 +51,7 @@ public interface CloudResourceInstanceMapper {
     void deleteByCloudAccountId(String cloudAccountId);
 
     // 预删除
-    int preDeleteByCloudAccountId(String cloudAccountId);
+    int preDeleteByIdList(@Param("idList") List<Long> idList, @Param("deleteAt") Date deleteAt);
 
     // 正式删除
     int commitDeleteByCloudAccountId(@Param("cloudAccountId") String cloudAccountId, @Param("delNum") int delNum);

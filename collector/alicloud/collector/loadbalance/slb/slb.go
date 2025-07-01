@@ -16,15 +16,15 @@
 package slb
 
 import (
-	"github.com/core-sdk/constant"
-	"github.com/core-sdk/log"
-	"github.com/core-sdk/schema"
 	"context"
 	slb20140515 "github.com/alibabacloud-go/slb-20140515/v4/client"
 	"github.com/alibabacloud-go/tea/tea"
 	"github.com/aliyun/alibaba-cloud-sdk-go/sdk/requests"
 	"github.com/aliyun/alibaba-cloud-sdk-go/services/vpc"
 	"github.com/cloudrec/alicloud/collector"
+	"github.com/core-sdk/constant"
+	"github.com/core-sdk/log"
+	"github.com/core-sdk/schema"
 	"go.uber.org/zap"
 	"net"
 	"time"
@@ -118,7 +118,7 @@ func GetInstanceDetail(ctx context.Context, service schema.ServiceInterface, res
 				cli.Endpoint = &slbSpeedEndpoint
 				continue
 			}
-			log.CtxLogger(ctx).Warn("DescribeLoadBalancers err: %s", zap.Error(err))
+			log.CtxLogger(ctx).Warn("DescribeLoadBalancers err", zap.Error(err))
 			break
 		}
 

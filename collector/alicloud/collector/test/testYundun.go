@@ -16,11 +16,11 @@
 package test
 
 import (
+	yundun_bastionhost20191209 "github.com/alibabacloud-go/yundun-bastionhost-20191209/v2/client"
+	"github.com/cloudrec/alicloud/collector"
 	"github.com/core-sdk/constant"
 	"github.com/core-sdk/log"
 	"github.com/core-sdk/schema"
-	yundun_bastionhost20191209 "github.com/alibabacloud-go/yundun-bastionhost-20191209/v2/client"
-	"github.com/cloudrec/alicloud/collector"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
 	"strconv"
@@ -97,7 +97,7 @@ func ListDescribeInstances(ctx context.Context, service schema.ServiceInterface,
 		}
 		response, err := cli.DescribeInstances(req)
 		if err != nil {
-			log.CtxLogger(ctx).Warn("yundun ListDescribeInstances error: %s", zap.Error(err))
+			log.CtxLogger(ctx).Warn("yundun ListDescribeInstances error", zap.Error(err))
 			return err
 		}
 		if len(response.Body.Instances) == 0 {
@@ -135,7 +135,7 @@ func GetDescribeInstanceAttribute(ctx context.Context, service schema.ServiceInt
 
 	response, err := cli.DescribeInstanceAttribute(req)
 	if err != nil {
-		log.CtxLogger(ctx).Warn("DescribeInstanceAttribute error: %s", zap.Error(err))
+		log.CtxLogger(ctx).Warn("DescribeInstanceAttribute error", zap.Error(err))
 		return nil
 	}
 	return response.Body.InstanceAttribute
@@ -156,7 +156,7 @@ func ListHosts(ctx context.Context, service schema.ServiceInterface, regionId *s
 		req.SetPageNumber(strconv.Itoa(pageNumber))
 		response, err := cli.ListHosts(req)
 		if err != nil {
-			log.CtxLogger(ctx).Warn("ListHosts error: %s", zap.Error(err))
+			log.CtxLogger(ctx).Warn("ListHosts error", zap.Error(err))
 			return nil
 		}
 		if len(response.Body.Hosts) == 0 {
@@ -180,7 +180,7 @@ func ListHostsWithAccount(ctx context.Context, service schema.ServiceInterface, 
 	}
 	response, err := cli.ListHosts(req)
 	if err != nil {
-		log.CtxLogger(ctx).Warn("ListHosts error: %s", zap.Error(err))
+		log.CtxLogger(ctx).Warn("ListHosts error", zap.Error(err))
 		return nil
 	}
 	if len(response.Body.Hosts) == 0 {
@@ -209,7 +209,7 @@ func ListDatabases(ctx context.Context, service schema.ServiceInterface, regionI
 		req.SetPageNumber(strconv.Itoa(pageNumber))
 		response, err := cli.ListDatabases(req)
 		if err != nil {
-			log.CtxLogger(ctx).Warn("ListDatabases error: %s", zap.Error(err))
+			log.CtxLogger(ctx).Warn("ListDatabases error", zap.Error(err))
 			return
 		}
 		if len(response.Body.Databases) == 0 {
@@ -240,7 +240,7 @@ func ListNetworkDomains(ctx context.Context, service schema.ServiceInterface, re
 		req.SetPageNumber(strconv.Itoa(pageNumber))
 		response, err := cli.ListNetworkDomains(req)
 		if err != nil {
-			log.CtxLogger(ctx).Warn("ListNetworkDomains error: %s", zap.Error(err))
+			log.CtxLogger(ctx).Warn("ListNetworkDomains error", zap.Error(err))
 			return
 		}
 		if len(response.Body.NetworkDomains) == 0 {
@@ -270,7 +270,7 @@ func ListHostAccounts(ctx context.Context, service schema.ServiceInterface, regi
 		req.SetPageNumber(strconv.Itoa(pageNumber))
 		response, err := cli.ListHostAccounts(req)
 		if err != nil {
-			log.CtxLogger(ctx).Warn("ListHostAccounts error: %s", zap.Error(err))
+			log.CtxLogger(ctx).Warn("ListHostAccounts error", zap.Error(err))
 			return
 		}
 		if len(response.Body.HostAccounts) == 0 {
@@ -300,7 +300,7 @@ func ListDatabaseAccounts(ctx context.Context, service schema.ServiceInterface, 
 		req.SetPageNumber(strconv.Itoa(pageNumber))
 		response, err := cli.ListDatabaseAccounts(req)
 		if err != nil {
-			log.CtxLogger(ctx).Warn("ListDatabaseAccounts error: %s", zap.Error(err))
+			log.CtxLogger(ctx).Warn("ListDatabaseAccounts error", zap.Error(err))
 			return
 		}
 		if len(response.Body.DatabaseAccounts) == 0 {
@@ -329,7 +329,7 @@ func ListUsers(ctx context.Context, service schema.ServiceInterface, regionId *s
 		req.SetPageNumber(strconv.Itoa(pageNumber))
 		response, err := cli.ListUsers(req)
 		if err != nil {
-			log.CtxLogger(ctx).Warn("ListUsers error: %s", zap.Error(err))
+			log.CtxLogger(ctx).Warn("ListUsers error", zap.Error(err))
 			return
 		}
 		if len(response.Body.Users) == 0 {
@@ -358,7 +358,7 @@ func ListUserGroups(ctx context.Context, service schema.ServiceInterface, region
 		req.SetPageNumber(strconv.Itoa(pageNumber))
 		response, err := cli.ListUserGroups(req)
 		if err != nil {
-			log.CtxLogger(ctx).Warn("ListUserGroups error: %s", zap.Error(err))
+			log.CtxLogger(ctx).Warn("ListUserGroups error", zap.Error(err))
 			return
 		}
 		if len(response.Body.UserGroups) == 0 {

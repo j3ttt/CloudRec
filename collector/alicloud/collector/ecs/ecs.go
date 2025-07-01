@@ -16,14 +16,14 @@
 package ecs
 
 import (
-	"github.com/core-sdk/constant"
-	"github.com/core-sdk/log"
-	"github.com/core-sdk/schema"
-	"github.com/core-sdk/utils"
 	"context"
 	"github.com/aliyun/alibaba-cloud-sdk-go/sdk/requests"
 	"github.com/aliyun/alibaba-cloud-sdk-go/services/ecs"
 	"github.com/cloudrec/alicloud/collector"
+	"github.com/core-sdk/constant"
+	"github.com/core-sdk/log"
+	"github.com/core-sdk/schema"
+	"github.com/core-sdk/utils"
 	"go.uber.org/zap"
 )
 
@@ -102,7 +102,7 @@ func ListEcsResource(ctx context.Context, service schema.ServiceInterface, res c
 	for {
 		response, err := cli.DescribeInstances(req)
 		if err != nil {
-			log.CtxLogger(ctx).Warn("DescribeInstances error: %s", zap.Error(err))
+			log.CtxLogger(ctx).Warn("DescribeInstances error", zap.Error(err))
 			return err
 		}
 		for _, i := range response.Instances.Instance {
@@ -142,7 +142,7 @@ func describeDisks(ctx context.Context, client *ecs.Client, instanceId string) (
 	for {
 		response, err := client.DescribeDisks(req)
 		if err != nil {
-			log.CtxLogger(ctx).Warn("describeDisks error: %s", zap.Error(err))
+			log.CtxLogger(ctx).Warn("describeDisks error", zap.Error(err))
 			break
 		}
 		disks = append(disks, response.Disks.Disk...)
@@ -169,7 +169,7 @@ func describeNetworkInterfaces(ctx context.Context, cli *ecs.Client, instanceId 
 	for {
 		resp, err := cli.DescribeNetworkInterfaces(req)
 		if err != nil {
-			log.CtxLogger(ctx).Warn("DescribeNetworkInterfaces error: %s", zap.Error(err))
+			log.CtxLogger(ctx).Warn("DescribeNetworkInterfaces error", zap.Error(err))
 			break
 		}
 		count += len(resp.NetworkInterfaceSets.NetworkInterfaceSet)

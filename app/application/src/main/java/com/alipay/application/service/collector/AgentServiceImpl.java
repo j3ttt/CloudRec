@@ -22,6 +22,7 @@ import com.alipay.application.service.collector.domain.repo.AgentRepository;
 import com.alipay.application.service.collector.domain.repo.CollectorTaskRepository;
 import com.alipay.application.service.collector.enums.TaskStatus;
 import com.alipay.application.service.common.Platform;
+import com.alipay.application.service.resource.DelResourceService;
 import com.alipay.application.service.resource.job.ClearJob;
 import com.alipay.application.service.rule.job.AccountScanJob;
 import com.alipay.application.service.system.utils.TokenUtil;
@@ -55,10 +56,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -101,6 +99,8 @@ public class AgentServiceImpl implements AgentService {
     private AccountScanJob accountScanJob;
     @Resource
     private CloudResourceInstanceMapper cloudResourceInstanceMapper;
+    @Resource
+    private DelResourceService delResourceService;
     @Resource
     private CollectorRecordMapper collectorRecordMapper;
     @Resource
@@ -388,9 +388,10 @@ public class AgentServiceImpl implements AgentService {
                     try {
                         return AgentCloudAccountVO.build(po, agentRegistryPO);
                     } catch (Exception e) {
-                        throw new RuntimeException(e);
+                        log.error("build AgentCloudAccountVO error,cloudAccountId:{}", po.getCloudAccountId(), e);
+                        return null;
                     }
-                }).toList();
+                }).filter(Objects::nonNull).toList();
 
         // 5. pre handler
         accountStartCollectPreHandler(list, agentRegistryPO);
@@ -402,28 +403,32 @@ public class AgentServiceImpl implements AgentService {
     void accountStartCollectPreHandler(List<CloudAccountPO> list, AgentRegistryPO agentRegistryPO) {
         // Change the status of this batch of account accounts to running
         list.forEach(cloudAccountPO -> {
-            cloudAccountPO.setCollectorStatus(Status.running.name());
-            cloudAccountPO.setLastScanTime(new Date());
-            cloudAccountMapper.updateByPrimaryKeySelective(cloudAccountPO);
+            try {
+                cloudAccountPO.setCollectorStatus(Status.running.name());
+                cloudAccountPO.setLastScanTime(new Date());
+                cloudAccountMapper.updateByPrimaryKeySelective(cloudAccountPO);
 
-            // Bind the corresponding relationship between account and collector
-            AgentRegistryCloudAccountPO agentRegistryCloudAccountPO = agentRegistryCloudAccountMapper
-                    .findOne(agentRegistryPO.getId(), cloudAccountPO.getCloudAccountId());
-            if (agentRegistryCloudAccountPO == null) {
-                agentRegistryCloudAccountPO = new AgentRegistryCloudAccountPO();
-                agentRegistryCloudAccountPO.setAgentRegistryId(agentRegistryPO.getId());
-                agentRegistryCloudAccountPO.setCloudAccountId(cloudAccountPO.getCloudAccountId());
-                agentRegistryCloudAccountPO.setRegistryValue(agentRegistryPO.getRegistryValue());
-                agentRegistryCloudAccountPO.setPlatform(agentRegistryPO.getPlatform());
-                try {
-                    agentRegistryCloudAccountMapper.insertSelective(agentRegistryCloudAccountPO);
-                } catch (Exception e) {
-                    log.error("Exceptions due to concurrent registrations");
+                // Bind the corresponding relationship between account and collector
+                AgentRegistryCloudAccountPO agentRegistryCloudAccountPO = agentRegistryCloudAccountMapper
+                        .findOne(agentRegistryPO.getId(), cloudAccountPO.getCloudAccountId());
+                if (agentRegistryCloudAccountPO == null) {
+                    agentRegistryCloudAccountPO = new AgentRegistryCloudAccountPO();
+                    agentRegistryCloudAccountPO.setAgentRegistryId(agentRegistryPO.getId());
+                    agentRegistryCloudAccountPO.setCloudAccountId(cloudAccountPO.getCloudAccountId());
+                    agentRegistryCloudAccountPO.setRegistryValue(agentRegistryPO.getRegistryValue());
+                    agentRegistryCloudAccountPO.setPlatform(agentRegistryPO.getPlatform());
+                    try {
+                        agentRegistryCloudAccountMapper.insertSelective(agentRegistryCloudAccountPO);
+                    } catch (Exception e) {
+                        log.error("Exceptions due to concurrent registrations");
+                    }
                 }
-            }
 
-            // Pre-delete asset data
-            cloudResourceInstanceMapper.preDeleteByCloudAccountId(cloudAccountPO.getCloudAccountId());
+                // Pre-delete asset data
+                delResourceService.preDeleteByCloudAccountId(cloudAccountPO.getCloudAccountId());
+            } catch (Exception e) {
+                log.error("accountStartCollectPreHandler error,cloudAccountId:{}", cloudAccountPO.getCloudAccountId(), e);
+            }
         });
     }
 

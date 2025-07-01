@@ -16,8 +16,8 @@
 package collector
 
 import (
-	"github.com/core-sdk/log"
 	"context"
+	"github.com/core-sdk/log"
 	"go.uber.org/zap"
 	"net"
 	"time"
@@ -166,7 +166,7 @@ func (s *Services) InitServices(cloudAccountParam schema.CloudAccountParam) (err
 	}
 
 	if err != nil {
-		log.GetWLogger().Warn("init huawei cloud services failed, err: %s", zap.Error(err))
+		log.GetWLogger().Warn("init huawei cloud services failed, err", zap.Error(err))
 	}
 
 	return err
