@@ -869,7 +869,7 @@ CREATE TABLE IF NOT EXISTS `whited_rule_config` (
   UNIQUE KEY `uk_ruletype_rulename`(`rule_type`, `rule_name`)
 ) AUTO_INCREMENT = 1 DEFAULT CHARSET = utf8mb4 COMMENT = '白名单规则配置';
 
-CREATE TABLE `collector_task` (
+CREATE TABLE IF NOT EXISTS `collector_task` (
       `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT COMMENT '主键',
       `gmt_create` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
       `gmt_modified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '修改时间',
@@ -886,13 +886,7 @@ CREATE TABLE `collector_task` (
       KEY `idx_account_status`(`cloud_account_id`, `status`)
 ) DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '采集器任务';
 
-ALTER TABLE `agent_registry_cloud_account`
-DROP COLUMN `start_time`;
-
-ALTER TABLE `agent_registry_cloud_account`
-DROP COLUMN `end_time`;
-
-CREATE TABLE `collector_record` (
+CREATE TABLE IF NOT EXISTS `collector_record` (
         `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT COMMENT '主键',
         `gmt_create` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
         `gmt_modified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '修改时间',
@@ -909,7 +903,7 @@ ALTER TABLE `collector_log`
     ADD COLUMN `collector_record_id` bigint(20) unsigned DEFAULT NULL COMMENT '采集记录id';
 
 ALTER TABLE `collector_log`
-    ADD KEY `idx_record_id_desp`(`collector_record_id`, `description`, `cloud_account_id`) ;
+    ADD KEY `idx_record_id_desp`(`collector_record_id`, `description`(255), `cloud_account_id`) ;
 
 ALTER TABLE `cloud_resource_instance_v1`
     ADD COLUMN `del_num` int(11) unsigned DEFAULT '0' COMMENT '删除次数';
