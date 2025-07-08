@@ -248,9 +248,9 @@
         FROM cloud_resource_instance_v1
         <include refid="findListWhere"/>
         <if test="scrollId != null and scrollId != ''">
-            AND id &lt; #{scrollId}
+            AND id > #{scrollId}
         </if>
-        ORDER BY id DESC
+        ORDER BY id ASC
         LIMIT #{size}
     </select>
 

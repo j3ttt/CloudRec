@@ -284,7 +284,7 @@ func (p *Platform) handleResource(account CloudAccount, resource Resource, colle
 
 					result, err := getJsonPathValue(d, resource.Dimension, resource.RowField, account.CloudAccountId)
 					if err != nil {
-						errorMsg := fmt.Sprintf("Code:[%s] %s The data will not be submitted to the server Platform => [%s] ResourceType => [%s]", CollectorError, err.Error(), p.Name, resource.ResourceType)
+						errorMsg := fmt.Sprintf("Code:[%s] %s  The data will not be submitted to the server CloudAccountId => [%s] Platform => [%s] ResourceType => [%s]", CollectorError, err.Error(), account.CloudAccountId, p.Name, resource.ResourceType)
 						log.GetWLogger().Warn(errorMsg)
 						collectorParam.CloudRecLogger.logAccountError(account.Platform, resource.ResourceType, account.CloudAccountId, account.CollectRecordId, errors.New(errorMsg))
 						continue

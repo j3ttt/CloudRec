@@ -18,6 +18,7 @@ package com.alipay.application.service.resource;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.serializer.SerializerFeature;
+import com.alipay.application.service.collector.SchedulerManager;
 import com.alipay.application.share.request.resource.DataPushRequest;
 import com.alipay.application.share.request.resource.ResourceInstance;
 import com.alipay.common.enums.Status;
@@ -38,6 +39,7 @@ import org.springframework.util.CollectionUtils;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
@@ -52,11 +54,17 @@ public class SaveResourceServiceImpl implements SaveResourceService {
     @Resource
     private CloudResourceInstanceMapper cloudResourceInstanceMapper;
 
-
+    private static final int MAX_RETRY_ATTEMPTS = 3;
+    private static final int RETRY_DELAY_SECONDS = 120;
+    
     public void saveOrUpdateData(DataPushRequest.Data dataPushRequest) {
+        saveOrUpdateDataWithRetry(dataPushRequest, 0);
+    }
+
+    private void saveOrUpdateDataWithRetry(DataPushRequest.Data dataPushRequest, int retryCount) {
         CloudAccountPO cloudAccountPO = cloudAccountMapper.findByCloudAccountId(dataPushRequest.getCloudAccountId());
         if (cloudAccountPO == null) {
-            log.error("account account not found, cloudAccountId:{}", dataPushRequest.getCloudAccountId());
+            log.warn("account not found, cloudAccountId:{}", dataPushRequest.getCloudAccountId());
             return;
         }
 
@@ -92,10 +100,24 @@ public class SaveResourceServiceImpl implements SaveResourceService {
                 }
             }
         } catch (Exception e) {
-            log.error("save resource instance error", e);
+            log.warn("cloud account id :{} save resource instance error, retry count: {}", cloudAccountPO.getCloudAccountId(), retryCount, e);
+            if (retryCount < MAX_RETRY_ATTEMPTS) {
+                SchedulerManager.getScheduler().schedule(
+                        () -> {
+                            try {
+                                saveOrUpdateDataWithRetry(dataPushRequest, retryCount + 1);
+                            } catch (Exception error) {
+                                log.warn("cloud account id :{} save resource instance error on retry {}", cloudAccountPO.getCloudAccountId(), retryCount + 1, error);
+                            }
+                        },
+                        RETRY_DELAY_SECONDS,
+                        TimeUnit.SECONDS
+                );
+            } else {
+                log.error("cloud account id :{} save resource instance failed after {} retries", cloudAccountPO.getCloudAccountId(), MAX_RETRY_ATTEMPTS);
+            }
         }
     }
-
 
     @Override
     public void acceptResourceData(DataPushRequest dataReq) {
