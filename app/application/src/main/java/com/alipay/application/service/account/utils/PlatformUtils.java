@@ -103,12 +103,14 @@ public class PlatformUtils {
                     map.put("vpcEndpoint", hwsPrivateCredential.getVpcEndpoint());
                     map.put("obsEndpoint", hwsPrivateCredential.getObsEndpoint());
                     break;
-//                case PlatformType.Enum.My_Cloud_Provider:
-//                    [3] ADD_NEW_CLOUD : To adapt the logic of parsing authentication information, you need to add a class corresponding to the cloud platform authentication information
+
                 case PlatformType.Enum.KINGSOFT_CLOUD:
                     KsyunCredential ksyunCredential = new Gson().fromJson(credentialsJson, KsyunCredential.class);
                     map.put("ak", ksyunCredential.getAk());
                     map.put("sk", ksyunCredential.getSk());
+                    break;
+                //  case PlatformType.Enum.My_Cloud_Provider:
+                // [3] ADD_NEW_CLOUD : To adapt the logic of parsing authentication information, you need to add a class corresponding to the cloud platform authentication information
                 default:
                     throw new IllegalStateException("Unexpected value: " + platform);
             }
