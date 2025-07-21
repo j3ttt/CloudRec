@@ -5,7 +5,7 @@
 // (the "License"); you may not use this file except in compliance with
 // the License.  You may obtain a copy of the License at
 //
-//  http://www.apache.org/licenses/LICENSE-2.0
+//	http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,22 +13,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package collector
+package cce
 
-const (
-	VPC            = "VPC"
-	SECURITY_GROUP = "Security Group"
-	BCC            = "BCC"
-	BLB            = "BLB"
-	APPBLB         = "APPBLB"
-	BOS            = "BOS"
-	RDS            = "RDS"
-	EIP            = "EIP"
-	IAM            = "IAM"
-	CCE            = "CCE"
-	Redis          = "Redis"
-	CCR            = "CCR"
-	BLS            = "BLS"
-	CFW            = "CFW"
-	CCE_RBAC       = "CCERBAC"
+import (
+	"fmt"
+
+	"github.com/baidubce/bce-sdk-go/bce"
+	"github.com/baidubce/bce-sdk-go/http"
 )
+
+// ListRBACs 集群列表 https://cloud.baidu.com/doc/CCE/s/pm2sxa9in#rbac-%E5%88%97%E8%A1%A8
+func (c *Client) ListRBACs(args *ListRBACsRequest) (*ListRBACsResponse, error) {
+	if args == nil {
+		return nil, fmt.Errorf("args is nil")
+	}
+	result := &ListRBACsResponse{}
+	err := bce.NewRequestBuilder(c).
+		WithMethod(http.GET).
+		WithURL(getRBACListURI()).
+		WithQueryParamFilter("userID", args.UserID).
+		WithResult(result).
+		Do()
+
+	return result, err
+}
