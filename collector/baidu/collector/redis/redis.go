@@ -17,9 +17,9 @@ package redis
 
 import (
 	"context"
-	"fmt"
 	"github.com/baidubce/bce-sdk-go/services/scs"
 	"github.com/cloudrec/baidu/collector"
+	"github.com/cloudrec/baidu/customsdk/redis"
 	"github.com/core-sdk/constant"
 	"github.com/core-sdk/log"
 	"github.com/core-sdk/schema"
@@ -63,7 +63,7 @@ func GetInstanceDetail(ctx context.Context, service schema.ServiceInterface, res
 	secretAccessKey := client.BceClient.Config.Credentials.SecretAccessKey
 	redisAccountClient, err := redis.NewClient(accessKeyId, secretAccessKey, client.Config.Endpoint)
 	if err != nil {
-		log.GetWLogger().Warn(fmt.Sprintf("init redisAccountClient failed, err: %s", err))
+		log.GetWLogger().Warn("init redisAccountClient failed", zap.Error(err))
 	}
 
 	arg := &scs.ListInstancesArgs{
@@ -139,7 +139,7 @@ func GetSecurityGroupRules(ctx context.Context, client *redis.Client, instanceId
 	}
 	resp, err := client.ListSecurityGroupActiveRules(arg)
 	if err != nil {
-		log.CtxLogger(ctx).Warn("GetAccounts error", zap.Error(err))
+		log.CtxLogger(ctx).Warn("GetSecurityGroupRules error", zap.Error(err))
 		return nil
 	}
 	return resp

@@ -17,8 +17,6 @@ package cce
 
 import (
 	"context"
-	"fmt"
-
 	"github.com/baidubce/bce-sdk-go/services/iam"
 	"go.uber.org/zap"
 
@@ -35,8 +33,8 @@ type RBACDetail struct {
 
 func GetRBACResource() schema.Resource {
 	return schema.Resource{
-		ResourceType:       collector.CCE_RBAC,
-		ResourceTypeName:   collector.CCE_RBAC,
+		ResourceType:       collector.CCERBAC,
+		ResourceTypeName:   collector.CCERBAC,
 		ResourceGroupType:  constant.CONTAINER,
 		Desc:               `https://cloud.baidu.com/doc/CCE/s/nkwopebgf`,
 		ResourceDetailFunc: GetRBACDetail,
@@ -65,13 +63,12 @@ func GetRBACDetail(ctx context.Context, service schema.ServiceInterface, res cha
 	iamClient, err := iam.NewClient(accessKeyId, secretAccessKey)
 	log.GetWLogger().Info("cce rbac", zap.String("accessKeyId", accessKeyId))
 	if err != nil {
-		log.GetWLogger().Warn(fmt.Sprintf("init iam client failed, err: %s", err))
-
+		log.GetWLogger().Warn("init iam client failed", zap.Error(err))
 		return err
 	}
 	users, err := iamClient.ListUser()
 	if err != nil {
-		log.CtxLogger(ctx).Error("iamClient ListUser error", zap.Error(err), zap.String("accessKeyId", accessKeyId))
+		log.CtxLogger(ctx).Error("iamClient ListUser error", zap.Error(err))
 
 		return err
 	}
@@ -82,10 +79,9 @@ func GetRBACDetail(ctx context.Context, service schema.ServiceInterface, res cha
 		rbacResponse, tmpErr := rbacClient.ListRBACs(arg)
 		if tmpErr != nil || rbacResponse == nil {
 			log.CtxLogger(ctx).Warn("rbacClient ListRBACs error", zap.Error(tmpErr))
-
-			return tmpErr
+			continue
 		}
-		log.GetWLogger().Info("cce rbac", zap.String("accessKeyId", accessKeyId), zap.String("user.Name", user.Name), zap.String("user.ID", user.Id), zap.Int("len", len(rbacResponse.Data)))
+		log.GetWLogger().Info("cce rbac", zap.String("user.Name", user.Name), zap.String("user.ID", user.Id), zap.Int("len", len(rbacResponse.Data)))
 		for _, rbacDetail := range rbacResponse.Data {
 			detail := RBACDetail{
 				RBAC: rbacDetail,

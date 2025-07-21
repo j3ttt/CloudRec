@@ -30,5 +30,5 @@ const (
 	CCR            = "CCR"
 	BLS            = "BLS"
 	CFW            = "CFW"
-	CCE_RBAC       = "CCERBAC"
+	CCERBAC        = "CCERBAC"
 )
