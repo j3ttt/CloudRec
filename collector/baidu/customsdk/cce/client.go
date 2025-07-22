@@ -13,17 +13,38 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package cce
 
 import (
-	platfrom "github.com/cloudrec/baidu/platform"
-	"github.com/core-sdk/log"
-	"github.com/core-sdk/schema"
+	"github.com/baidubce/bce-sdk-go/bce"
 )
 
-func main() {
+const (
+	URI_PREFIX        = bce.URI_PREFIX + "api/cce/service/v2"
+	REMEDY_URI_PREFIX = bce.URI_PREFIX + "api/cce/remedy/v1"
 
-	if err := schema.RunExecutor(platfrom.GetPlatformConfig()); err != nil {
-		log.GetWLogger().Error(err.Error())
+	DEFAULT_ENDPOINT = "cce." + bce.DEFAULT_REGION + ".baidubce.com"
+
+	REQUEST_RBAC_LIST_URL = "/rbac"
+)
+
+var _ Interface = &Client{}
+
+// Client 实现 ccev2.Interface
+type Client struct {
+	*bce.BceClient
+}
+
+func NewClient(ak, sk, endPoint string) (*Client, error) {
+	if len(endPoint) == 0 {
+		endPoint = DEFAULT_ENDPOINT
 	}
+	client, err := bce.NewBceClientWithAkSk(ak, sk, endPoint)
+	if err != nil {
+		return nil, err
+	}
+	return &Client{client}, nil
+}
+func getRBACListURI() string {
+	return URI_PREFIX + REQUEST_RBAC_LIST_URL
 }

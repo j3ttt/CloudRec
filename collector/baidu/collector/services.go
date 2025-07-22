@@ -16,8 +16,6 @@
 package collector
 
 import (
-	"github.com/core-sdk/log"
-	"github.com/core-sdk/schema"
 	"fmt"
 	"github.com/baidubce/bce-sdk-go/services/appblb"
 	"github.com/baidubce/bce-sdk-go/services/bcc"
@@ -33,24 +31,28 @@ import (
 	"github.com/baidubce/bce-sdk-go/services/scs"
 	"github.com/baidubce/bce-sdk-go/services/vpc"
 	"github.com/baidubce/bce-sdk-go/services/vpn"
+	"github.com/cloudrec/baidu/customsdk/cce"
+	"github.com/core-sdk/log"
+	"github.com/core-sdk/schema"
 )
 
 type Services struct {
-	VPCClient    *vpc.Client
-	BCCClient    *bcc.Client
-	BLBClient    *blb.Client
-	APPBLBClient *appblb.Client
-	BOSClient    *bos.Client
-	RDSClient    *rds.Client
-	EIPClient    *eip.Client
-	IAMClient    *iam.Client
-	CCEClient    *v2.Client
-	RedisClient  *scs.Client
-	CCRClient    *eccr.Client
-	ECCRClient   *eccr.Client
-	BLSClient    *bls.Client
-	CFWClient    *cfw.Client
-	VPNClient    *vpn.Client
+	VPCClient       *vpc.Client
+	BCCClient       *bcc.Client
+	BLBClient       *blb.Client
+	APPBLBClient    *appblb.Client
+	BOSClient       *bos.Client
+	RDSClient       *rds.Client
+	EIPClient       *eip.Client
+	IAMClient       *iam.Client
+	CCEClient       *v2.Client
+	RedisClient     *scs.Client
+	CCRClient       *eccr.Client
+	ECCRClient      *eccr.Client
+	BLSClient       *bls.Client
+	CFWClient       *cfw.Client
+	VPNClient       *vpn.Client
+	CCECustomClient *cce.Client
 }
 
 // Clone creates a new instance of Services
@@ -143,6 +145,12 @@ func (s *Services) InitServices(cloudAccountParam schema.CloudAccountParam) (err
 			log.GetWLogger().Warn(fmt.Sprintf("init bls client failed, err: %s", err))
 		}
 		s.CFWClient = cfwClient
+	case CCERBAC:
+		cceCustomClient, err := cce.NewClient(param.AK, param.SK, param.Region)
+		if err != nil {
+			log.GetWLogger().Warn(fmt.Sprintf("init customClient failed, err: %s", err))
+		}
+		s.CCECustomClient = cceCustomClient
 	}
 
 	return nil
