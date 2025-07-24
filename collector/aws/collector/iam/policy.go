@@ -61,13 +61,26 @@ func GetPolicyDetail(ctx context.Context, service schema.ServiceInterface, res c
 	}
 
 	var wg sync.WaitGroup
-	for _, policy := range policies {
+const numWorkers = 10 // A reasonable number of concurrent workers. Consider making this configurable.
+	jobs := make(chan types.Policy, len(policies))
+
+	var wg sync.WaitGroup
+	for i := 0; i < numWorkers; i++ {
 		wg.Add(1)
-		go func(p types.Policy) {
+		go func() {
 			defer wg.Done()
-			res <- describePolicyDetail(ctx, client, p)
-		}(policy)
+			for p := range jobs {
+				res <- describePolicyDetail(ctx, client, p)
+			}
+		}()
 	}
+
+	for _, policy := range policies {
+		jobs <- policy
+	}
+	close(jobs)
+
+	wg.Wait()
 	wg.Wait()
 
 	return nil

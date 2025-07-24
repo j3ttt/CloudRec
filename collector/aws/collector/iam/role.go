@@ -62,13 +62,26 @@ func GetRoleDetail(ctx context.Context, service schema.ServiceInterface, res cha
 	}
 
 	var wg sync.WaitGroup
-	for _, role := range roles {
+const numWorkers = 10 // A reasonable number of concurrent workers. Consider making this configurable.
+	jobs := make(chan types.Role, len(roles))
+
+	var wg sync.WaitGroup
+	for i := 0; i < numWorkers; i++ {
 		wg.Add(1)
-		go func(r types.Role) {
+		go func() {
 			defer wg.Done()
-			res <- describeRoleDetail(ctx, client, r)
-		}(role)
+			for r := range jobs {
+				res <- describeRoleDetail(ctx, client, r)
+			}
+		}()
 	}
+
+	for _, role := range roles {
+		jobs <- role
+	}
+	close(jobs)
+
+	wg.Wait()
 	wg.Wait()
 
 	return nil
