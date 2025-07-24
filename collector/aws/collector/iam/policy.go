@@ -60,8 +60,7 @@ func GetPolicyDetail(ctx context.Context, service schema.ServiceInterface, res c
 		return err
 	}
 
-	var wg sync.WaitGroup
-const numWorkers = 10 // A reasonable number of concurrent workers. Consider making this configurable.
+	const numWorkers = 10 // A reasonable number of concurrent workers. Consider making this configurable.
 	jobs := make(chan types.Policy, len(policies))
 
 	var wg sync.WaitGroup
@@ -80,7 +79,6 @@ const numWorkers = 10 // A reasonable number of concurrent workers. Consider mak
 	}
 	close(jobs)
 
-	wg.Wait()
 	wg.Wait()
 
 	return nil
