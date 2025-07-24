@@ -64,14 +64,22 @@ func GetUserDetail(ctx context.Context, service schema.ServiceInterface, res cha
 		return err
 	}
 
+	const numWorkers = 10
+	jobs := make(chan types.User, len(users))
 	var wg sync.WaitGroup
-	for _, user := range users {
+	for w := 0; w < numWorkers; w++ {
 		wg.Add(1)
-		go func(u types.User) {
+		go func() {
 			defer wg.Done()
-			res <- describeUserDetail(ctx, client, u)
-		}(user)
+			for user := range jobs {
+				res <- describeUserDetail(ctx, client, user)
+			}
+		}()
 	}
+	for _, user := range users {
+		jobs <- user
+	}
+	close(jobs)
 	wg.Wait()
 
 	return nil
