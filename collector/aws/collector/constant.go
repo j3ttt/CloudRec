@@ -33,6 +33,7 @@ const (
 	ResourceRecordSet string = "ResourceRecordSet"
 	CDN               string = "CDN"
 	User              string = "User"
+	IAMPolicy         string = "IAM Policy"
 	UserGroup         string = "User Group"
 	Role              string = "Role"
 	AccountSettings   string = "Account Settings"
