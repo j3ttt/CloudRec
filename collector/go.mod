@@ -110,7 +110,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.53.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.53.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.44.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.170.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.237.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.36.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.60.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/efs v1.33.6 // indirect
@@ -121,10 +121,10 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/fsx v1.49.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/guardduty v1.57.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/iam v1.38.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.12.4 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.13.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.4.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.10.18 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.12.5 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.13.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.18.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/kms v1.41.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.73.0 // indirect
