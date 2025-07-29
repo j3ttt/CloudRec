@@ -16,48 +16,76 @@
 package collector
 
 import (
-	"github.com/core-sdk/log"
-	"github.com/core-sdk/schema"
 	"bytes"
 	"context"
 	"fmt"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
+	"github.com/aws/aws-sdk-go-v2/service/account"
+	"github.com/aws/aws-sdk-go-v2/service/autoscaling"
+	"github.com/aws/aws-sdk-go-v2/service/cloudformation"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
+	"github.com/aws/aws-sdk-go-v2/service/cloudtrail"
+	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
+	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
+	"github.com/aws/aws-sdk-go-v2/service/configservice"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/ecr"
+	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	"github.com/aws/aws-sdk-go-v2/service/efs"
+	"github.com/aws/aws-sdk-go-v2/service/eks"
 	"github.com/aws/aws-sdk-go-v2/service/elasticache"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 	"github.com/aws/aws-sdk-go-v2/service/fsx"
+	"github.com/aws/aws-sdk-go-v2/service/guardduty"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
+	"github.com/aws/aws-sdk-go-v2/service/kms"
+	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/route53"
 	"github.com/aws/aws-sdk-go-v2/service/route53domains"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/sns"
 	"github.com/aws/aws-sdk-go-v2/service/wafv2"
 	"github.com/aws/smithy-go/logging"
+	"github.com/core-sdk/log"
+	"github.com/core-sdk/schema"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 )
 
 // Services contains regional client of AWS services
 type Services struct {
-	EC2            *ec2.Client
-	S3             *s3.Client
-	CLB            *elasticloadbalancing.Client
-	ELB            *elasticloadbalancingv2.Client
-	IAM            *iam.Client
-	EFS            *efs.Client
-	FSx            *fsx.Client
-	RDS            *rds.Client
-	Route53        *route53.Client
-	Route53Domains *route53domains.Client
-	CloudFront     *cloudfront.Client
-	WAFv2          *wafv2.Client
-	ElastiCache    *elasticache.Client
-	ECR            *ecr.Client
+	EC2              *ec2.Client
+	IAM              *iam.Client
+	S3               *s3.Client
+	Lambda           *lambda.Client
+	KMS              *kms.Client
+	ECR              *ecr.Client
+	ElastiCache      *elasticache.Client
+	ELB              *elasticloadbalancingv2.Client
+	CLB              *elasticloadbalancing.Client
+	FSx              *fsx.Client
+	RDS              *rds.Client
+	Route53Domains   *route53domains.Client
+	Route53          *route53.Client
+	CloudFront       *cloudfront.Client
+	WAFv2            *wafv2.Client
+	CloudTrail       *cloudtrail.Client
+	AutoScaling      *autoscaling.Client
+	ECS              *ecs.Client
+	EKS              *eks.Client
+	DynamoDB         *dynamodb.Client
+	CloudFormation   *cloudformation.Client
+	GuardDuty        *guardduty.Client
+	EFS              *efs.Client
+	SNS              *sns.Client
+	CloudWatch       *cloudwatch.Client
+	CloudWatchLogs   *cloudwatchlogs.Client
+	Account          *account.Client
+	Config           *configservice.Client
 }
 
 // Clone creates a new instance of Services
@@ -80,7 +108,7 @@ func (s *Services) InitServices(cloudAccountParam schema.CloudAccountParam) (err
 
 	// init client of aws services
 	switch cloudAccountParam.ResourceType {
-	case EC2, ElasticIP, NetworkAcl, SecurityGroup, Vpc:
+		case EC2, ElasticIP, NetworkAcl, SecurityGroup, Vpc, VPCEndpointService, FlowLog, NetworkInterface:
 		s.EC2 = initEC2Client(cfg)
 	case Bucket:
 		s.S3 = initS3Client(cfg)
@@ -107,11 +135,63 @@ func (s *Services) InitServices(cloudAccountParam schema.CloudAccountParam) (err
 		s.Route53 = initRoute53Client(cfg)
 	case CDN:
 		s.CloudFront = initCloudFrontClient(cfg)
+	case KMS:
+		s.KMS = initKMSClient(cfg)
 	case WebACL:
 		s.WAFv2 = initWafv2Client(cfg)
+	case CloudTrail:
+		s.CloudTrail = initCloudTrailClient(cfg)
+	case Lambda:
+		s.Lambda = initLambdaClient(cfg)
+	case AutoScalingGroup:
+		s.AutoScaling = initAutoScalingClient(cfg)
+	case ECSCluster, ECSService, ECSTask, ECSTaskDefinition:
+		s.ECS = initECSClient(cfg)
+	case EKSCluster:
+		s.EKS = initEKSClient(cfg)
+	case DynamoDBTable:
+		s.DynamoDB = initDynamoDBClient(cfg)
+	case CloudFormationStack:
+		s.CloudFormation = initCloudFormationClient(cfg)
+	case GuardDuty:
+		s.GuardDuty = initGuardDutyClient(cfg)
+	case SNSTopic:
+		s.SNS = initSNSClient(cfg)
+	case CloudWatchAlarm:
+		s.CloudWatch = initCloudWatchClient(cfg)
+	case CloudWatchLogGroup:
+		s.CloudWatchLogs = initCloudWatchLogsClient(cfg)
+	case Account:
+		s.Account = initAccountClient(cfg)
+	case Config:
+		s.Config = initConfigServiceClient(cfg)
 	}
 
 	return nil
+}
+
+func initConfigServiceClient(cfg aws.Config) *configservice.Client {
+	return configservice.NewFromConfig(cfg)
+}
+
+func initAccountClient(cfg aws.Config) *account.Client {
+	return account.NewFromConfig(cfg)
+}
+
+func initCloudWatchClient(cfg aws.Config) *cloudwatch.Client {
+	return cloudwatch.NewFromConfig(cfg)
+}
+
+func initCloudWatchLogsClient(cfg aws.Config) *cloudwatchlogs.Client {
+	return cloudwatchlogs.NewFromConfig(cfg)
+}
+
+func initGuardDutyClient(cfg aws.Config) *guardduty.Client {
+	return guardduty.NewFromConfig(cfg)
+}
+
+func initKMSClient(cfg aws.Config) *kms.Client {
+	return kms.NewFromConfig(cfg)
 }
 
 func initECRClient(cfg aws.Config) *ecr.Client {
@@ -168,6 +248,38 @@ func initCLBClient(cfg aws.Config) *elasticloadbalancing.Client {
 }
 func initELBClient(cfg aws.Config) *elasticloadbalancingv2.Client {
 	return elasticloadbalancingv2.NewFromConfig(cfg)
+}
+
+func initCloudTrailClient(cfg aws.Config) *cloudtrail.Client {
+	return cloudtrail.NewFromConfig(cfg)
+}
+
+func initLambdaClient(cfg aws.Config) *lambda.Client {
+	return lambda.NewFromConfig(cfg)
+}
+
+func initAutoScalingClient(cfg aws.Config) *autoscaling.Client {
+	return autoscaling.NewFromConfig(cfg)
+}
+
+func initECSClient(cfg aws.Config) *ecs.Client {
+	return ecs.NewFromConfig(cfg)
+}
+
+func initEKSClient(cfg aws.Config) *eks.Client {
+	return eks.NewFromConfig(cfg)
+}
+
+func initDynamoDBClient(cfg aws.Config) *dynamodb.Client {
+	return dynamodb.NewFromConfig(cfg)
+}
+
+func initCloudFormationClient(cfg aws.Config) *cloudformation.Client {
+	return cloudformation.NewFromConfig(cfg)
+}
+
+func initSNSClient(cfg aws.Config) *sns.Client {
+	return sns.NewFromConfig(cfg)
 }
 
 // BuildConfigWithRegion returns validate aws route with the region passed in

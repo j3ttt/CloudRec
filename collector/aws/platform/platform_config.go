@@ -17,14 +17,26 @@ package platform
 
 import (
 	"github.com/cloudrec/aws/collector"
+	"github.com/cloudrec/aws/collector/account"
+	"github.com/cloudrec/aws/collector/autoscaling"
+	"github.com/cloudrec/aws/collector/cloudformation"
 	"github.com/cloudrec/aws/collector/cloudfront"
+	"github.com/cloudrec/aws/collector/cloudtrail"
+	"github.com/cloudrec/aws/collector/cloudwatch"
+	"github.com/cloudrec/aws/collector/config"
+	"github.com/cloudrec/aws/collector/dynamodb"
 	"github.com/cloudrec/aws/collector/ec2"
 	"github.com/cloudrec/aws/collector/ecr"
+	"github.com/cloudrec/aws/collector/ecs"
 	"github.com/cloudrec/aws/collector/efs"
+	"github.com/cloudrec/aws/collector/eks"
 	"github.com/cloudrec/aws/collector/elasticache"
 	"github.com/cloudrec/aws/collector/elasticloadbalancing"
 	"github.com/cloudrec/aws/collector/fsx"
+	"github.com/cloudrec/aws/collector/guardduty"
 	"github.com/cloudrec/aws/collector/iam"
+	"github.com/cloudrec/aws/collector/kms"
+	"github.com/cloudrec/aws/collector/lambda"
 	"github.com/cloudrec/aws/collector/rds"
 	"github.com/cloudrec/aws/collector/route53"
 	"github.com/cloudrec/aws/collector/s3"
@@ -44,6 +56,10 @@ func GetPlatformConfig() *schema.Platform {
 			ec2.GetNetworkAclResource(),
 			ec2.GetSecurityGroupResource(),
 			ec2.GetVPCResource(),
+			ec2.GetVPCResource(),
+			ec2.GetVpcEndpointServiceResource(),
+			ec2.GetFlowLogResource(),
+			ec2.GetNetworkInterfaceResource(),
 			rds.GetRDSInstanceResource(),
 			elasticloadbalancing.GetELBResource(),
 			elasticloadbalancing.GetCLBResource(),
@@ -61,6 +77,22 @@ func GetPlatformConfig() *schema.Platform {
 			iam.GetGroupResource(),
 			iam.GetAccountSettingsResource(),
 			iam.GetPolicyResource(),
+			kms.GetKeyResource(),
+			config.GetRecorderResource(),
+			guardduty.GetDetectorResource(),
+			cloudtrail.GetTrailResource(),
+			lambda.GetFunctionResource(),
+			autoscaling.GetGroupResource(),
+			ecs.GetClusterResource(),
+			ecs.GetServiceResource(),
+			ecs.GetTaskResource(),
+			ecs.GetTaskDefinitionResource(),
+			eks.GetClusterResource(),
+			dynamodb.GetTableResource(),
+			cloudformation.GetStackResource(),
+			cloudwatch.GetAlarmResource(),
+			cloudwatch.GetLogGroupResource(),
+			account.GetAccountResource(),
 		},
 		Service: &collector.Services{},
 
