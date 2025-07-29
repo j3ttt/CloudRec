@@ -84,8 +84,6 @@ func GetPlatformConfig() *schema.Platform {
 			lambda.GetFunctionResource(),
 			autoscaling.GetGroupResource(),
 			ecs.GetClusterResource(),
-			ecs.GetServiceResource(),
-			ecs.GetTaskResource(),
 			ecs.GetTaskDefinitionResource(),
 			eks.GetClusterResource(),
 			dynamodb.GetTableResource(),

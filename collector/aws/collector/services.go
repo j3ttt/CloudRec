@@ -145,7 +145,7 @@ func (s *Services) InitServices(cloudAccountParam schema.CloudAccountParam) (err
 		s.Lambda = initLambdaClient(cfg)
 	case AutoScalingGroup:
 		s.AutoScaling = initAutoScalingClient(cfg)
-	case ECSCluster, ECSService, ECSTask, ECSTaskDefinition:
+	case ECSCluster, ECSTaskDefinition:
 		s.ECS = initECSClient(cfg)
 	case EKSCluster:
 		s.EKS = initEKSClient(cfg)
