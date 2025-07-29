@@ -18,6 +18,7 @@ package platform
 import (
 	"github.com/cloudrec/aws/collector"
 	"github.com/cloudrec/aws/collector/account"
+	"github.com/cloudrec/aws/collector/appstream"
 	"github.com/cloudrec/aws/collector/autoscaling"
 	"github.com/cloudrec/aws/collector/cloudformation"
 	"github.com/cloudrec/aws/collector/cloudfront"

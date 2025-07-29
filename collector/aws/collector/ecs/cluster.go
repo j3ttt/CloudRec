@@ -64,34 +64,7 @@ func GetClusterDetail(ctx context.Context, service schema.ServiceInterface, res 
 		return err
 	}
 
-	var wg sync.WaitGroup
-	jobs := make(chan []string, len(clusterArns))
-
-	// Start workers
-	for i := 0; i < maxWorkers; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			for arnBatch := range jobs {
-				describedClusters, err := describeClusters(ctx, client, arnBatch)
-				if err != nil {
-					log.CtxLogger(ctx).Warn("failed to describe ecs cluster", zap.Error(err))
-					continue
-				}
-				if len(describedClusters) > 0 {
-					cluster := describedClusters[0]
-					services, _ := listServices(ctx, client, *cluster.ClusterArn)
-					tasks, _ := listTasks(ctx, client, *cluster.ClusterArn)
-					res <- ClusterDetail{
-						Cluster:  cluster,
-						Services: services,
-						Tasks:    tasks,
-					}
-				}
-			}
-		}()
-	}
-
+	var clusters []types.Cluster
 	// Describe clusters in batches of 100, which is the API limit.
 	for i := 0; i < len(clusterArns); i += 100 {
 		end := i + 100
@@ -100,13 +73,63 @@ func GetClusterDetail(ctx context.Context, service schema.ServiceInterface, res 
 		}
 		batch := clusterArns[i:end]
 
-		jobs <- batch
+		describedClusters, err := describeClusters(ctx, client, batch)
+		if err != nil {
+			log.CtxLogger(ctx).Warn("failed to describe ecs clusters", zap.Error(err))
+			continue
+		}
+		clusters = append(clusters, describedClusters...)
+	}
+
+	var wg sync.WaitGroup
+	jobs := make(chan types.Cluster, len(clusters))
+
+	// Start workers
+	for i := 0; i < maxWorkers; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for cluster := range jobs {
+				detail := describeClusterDetail(ctx, client, cluster)
+				res <- detail
+			}
+		}()
+	}
+
+	for _, cluster := range clusters {
+		jobs <- cluster
 	}
 	close(jobs)
 
 	wg.Wait()
 
 	return nil
+}
+
+func describeClusterDetail(ctx context.Context, client *ecs.Client, cluster types.Cluster) interface{} {
+	var wg sync.WaitGroup
+	var services []types.Service
+	var tasks []types.Task
+
+	wg.Add(2)
+
+	go func() {
+		defer wg.Done()
+		services, _ = listServices(ctx, client, *cluster.ClusterArn)
+	}()
+
+	go func() {
+		defer wg.Done()
+		tasks, _ = listTasks(ctx, client, *cluster.ClusterArn)
+	}()
+
+	wg.Wait()
+
+	return &ClusterDetail{
+		Cluster:  cluster,
+		Services: services,
+		Tasks:    tasks,
+	}
 }
 
 // listClusters retrieves all ECS cluster ARNs in a region.

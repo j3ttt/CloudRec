@@ -44,9 +44,9 @@ const (
 	GuardDuty           string = "GuardDuty"
 	CloudTrail          string = "CloudTrail"
 	Lambda              string = "Lambda"
-		AutoScalingGroup  string = "AutoScalingGroup"
-	ECSCluster        string = "ECSCluster"
-	ECSTaskDefinition string = "ECSTaskDefinition"
+	AutoScalingGroup    string = "AutoScalingGroup"
+	ECSCluster          string = "ECSCluster"
+	ECSTaskDefinition   string = "ECSTaskDefinition"
 	EKSCluster          string = "EKSCluster"
 	DynamoDBTable       string = "DynamoDBTable"
 	CloudFormationStack string = "CloudFormationStack"
@@ -58,4 +58,5 @@ const (
 	VPCEndpointService  string = "VPCEndpointService"
 	FlowLog             string = "FlowLog"
 	NetworkInterface    string = "NetworkInterface"
+	AppStreamFleet      string = "AppStreamFleet"
 )
