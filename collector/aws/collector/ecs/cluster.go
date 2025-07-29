@@ -49,7 +49,9 @@ func GetClusterResource() schema.Resource {
 
 // ClusterDetail aggregates all information for a single ECS cluster.
 type ClusterDetail struct {
-	Cluster types.Cluster
+	Cluster  types.Cluster
+	Services []types.Service
+	Tasks    []types.Task
 }
 
 // GetClusterDetail fetches the details for all ECS clusters in a region.
@@ -63,31 +65,44 @@ func GetClusterDetail(ctx context.Context, service schema.ServiceInterface, res 
 	}
 
 	var wg sync.WaitGroup
-	tasks := make(chan string, len(clusterArns))
+	jobs := make(chan []string, len(clusterArns))
 
 	// Start workers
 	for i := 0; i < maxWorkers; i++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			for arn := range tasks {
-				describedClusters, err := describeClusters(ctx, client, []string{arn})
+			for arnBatch := range jobs {
+				describedClusters, err := describeClusters(ctx, client, arnBatch)
 				if err != nil {
-					log.CtxLogger(ctx).Warn("failed to describe ecs cluster", zap.String("arn", arn), zap.Error(err))
+					log.CtxLogger(ctx).Warn("failed to describe ecs cluster", zap.Error(err))
 					continue
 				}
 				if len(describedClusters) > 0 {
-					res <- ClusterDetail{Cluster: describedClusters[0]}
+					cluster := describedClusters[0]
+					services, _ := listServices(ctx, client, *cluster.ClusterArn)
+					tasks, _ := listTasks(ctx, client, *cluster.ClusterArn)
+					res <- ClusterDetail{
+						Cluster:  cluster,
+						Services: services,
+						Tasks:    tasks,
+					}
 				}
 			}
 		}()
 	}
 
-	// Add tasks to the queue
-	for _, arn := range clusterArns {
-		tasks <- arn
+	// Describe clusters in batches of 100, which is the API limit.
+	for i := 0; i < len(clusterArns); i += 100 {
+		end := i + 100
+		if end > len(clusterArns) {
+			end = len(clusterArns)
+		}
+		batch := clusterArns[i:end]
+
+		jobs <- batch
 	}
-	close(tasks)
+	close(jobs)
 
 	wg.Wait()
 
@@ -115,4 +130,44 @@ func describeClusters(ctx context.Context, c *ecs.Client, clusterArns []string) 
 		return nil, err
 	}
 	return output.Clusters, nil
+}
+
+// listServices retrieves all ECS service ARNs in a cluster.
+func listServices(ctx context.Context, c *ecs.Client, clusterArn string) ([]types.Service, error) {
+	var services []types.Service
+	paginator := ecs.NewListServicesPaginator(c, &ecs.ListServicesInput{Cluster: &clusterArn})
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		if len(page.ServiceArns) > 0 {
+			describedServices, err := c.DescribeServices(ctx, &ecs.DescribeServicesInput{Cluster: &clusterArn, Services: page.ServiceArns, Include: []types.ServiceField{types.ServiceFieldTags}})
+			if err != nil {
+				return nil, err
+			}
+			services = append(services, describedServices.Services...)
+		}
+	}
+	return services, nil
+}
+
+// listTasks retrieves all ECS task ARNs in a cluster.
+func listTasks(ctx context.Context, c *ecs.Client, clusterArn string) ([]types.Task, error) {
+	var tasks []types.Task
+	paginator := ecs.NewListTasksPaginator(c, &ecs.ListTasksInput{Cluster: &clusterArn})
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		if len(page.TaskArns) > 0 {
+			describedTasks, err := c.DescribeTasks(ctx, &ecs.DescribeTasksInput{Cluster: &clusterArn, Tasks: page.TaskArns, Include: []types.TaskField{types.TaskFieldTags}})
+			if err != nil {
+				return nil, err
+			}
+			tasks = append(tasks, describedTasks.Tasks...)
+		}
+	}
+	return tasks, nil
 }
