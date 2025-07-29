@@ -24,11 +24,6 @@ import (
 	"github.com/core-sdk/log"
 	"github.com/core-sdk/schema"
 	"go.uber.org/zap"
-	"sync"
-)
-
-const (
-	maxWorkers = 10
 )
 
 // GetGroupResource returns a Group Resource
@@ -62,27 +57,9 @@ func GetGroupDetail(ctx context.Context, service schema.ServiceInterface, res ch
 		return err
 	}
 
-	var wg sync.WaitGroup
-	tasks := make(chan types.AutoScalingGroup, len(groups))
-
-	// Start workers
-	for i := 0; i < maxWorkers; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			for group := range tasks {
-				res <- GroupDetail{Group: group}
-			}
-		}()
-	}
-
-	// Add tasks to the queue
 	for _, group := range groups {
-		tasks <- group
+		res <- GroupDetail{Group: group}
 	}
-	close(tasks)
-
-	wg.Wait()
 
 	return nil
 }

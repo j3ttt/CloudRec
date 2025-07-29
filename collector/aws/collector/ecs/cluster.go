@@ -65,17 +65,17 @@ func GetClusterDetail(ctx context.Context, service schema.ServiceInterface, res 
 	}
 
 	var wg sync.WaitGroup
-	jobs := make(chan string, len(clusterArns))
+	jobs := make(chan []string, len(clusterArns))
 
 	// Start workers
 	for i := 0; i < maxWorkers; i++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			for arn := range jobs {
-				describedClusters, err := describeClusters(ctx, client, []string{arn})
+			for arnBatch := range jobs {
+				describedClusters, err := describeClusters(ctx, client, arnBatch)
 				if err != nil {
-					log.CtxLogger(ctx).Warn("failed to describe ecs cluster", zap.String("arn", arn), zap.Error(err))
+					log.CtxLogger(ctx).Warn("failed to describe ecs cluster", zap.Error(err))
 					continue
 				}
 				if len(describedClusters) > 0 {
@@ -92,9 +92,15 @@ func GetClusterDetail(ctx context.Context, service schema.ServiceInterface, res 
 		}()
 	}
 
-	// Add tasks to the queue
-	for _, arn := range clusterArns {
-		jobs <- arn
+	// Describe clusters in batches of 100, which is the API limit.
+	for i := 0; i < len(clusterArns); i += 100 {
+		end := i + 100
+		if end > len(clusterArns) {
+			end = len(clusterArns)
+		}
+		batch := clusterArns[i:end]
+
+		jobs <- batch
 	}
 	close(jobs)
 

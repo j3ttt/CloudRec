@@ -46,7 +46,7 @@ func GetTrailResource() schema.Resource {
 // TrailDetail aggregates all information for a single CloudTrail trail.
 type TrailDetail struct {
 	Trail          types.Trail
-	Status         *TrailStatus
+	Status         *cloudtrail.GetTrailStatusOutput
 	EventSelectors []types.EventSelector
 	Tags           []types.Tag
 }
@@ -80,7 +80,7 @@ func GetTrailDetail(ctx context.Context, service schema.ServiceInterface, res ch
 // describeTrailDetail fetches all details for a single trail.
 func describeTrailDetail(ctx context.Context, client *cloudtrail.Client, trail types.Trail) *TrailDetail {
 	var wg sync.WaitGroup
-	var status *TrailStatus
+	var status *cloudtrail.GetTrailStatusOutput
 	var eventSelectors []types.EventSelector
 	var tags []types.Tag
 
@@ -121,31 +121,13 @@ func describeTrails(ctx context.Context, c *cloudtrail.Client) ([]types.Trail, e
 }
 
 // getTrailStatus retrieves the status for a single trail.
-func getTrailStatus(ctx context.Context, c *cloudtrail.Client, trailARN *string) (*TrailStatus, error) {
+func getTrailStatus(ctx context.Context, c *cloudtrail.Client, trailARN *string) (*cloudtrail.GetTrailStatusOutput, error) {
 	output, err := c.GetTrailStatus(ctx, &cloudtrail.GetTrailStatusInput{Name: trailARN})
 	if err != nil {
 		log.CtxLogger(ctx).Warn("failed to get trail status", zap.String("trailARN", *trailARN), zap.Error(err))
 		return nil, err
 	}
-	return &TrailStatus{
-		output.IsLogging,
-		output.LatestCloudWatchLogsDeliveryError,
-		output.LatestCloudWatchLogsDeliveryTime,
-		output.LatestDeliveryAttemptSucceeded,
-		output.LatestDeliveryAttemptTime,
-		output.LatestDeliveryError,
-		output.LatestDeliveryTime,
-		output.LatestDigestDeliveryError,
-		output.LatestDigestDeliveryTime,
-		output.LatestNotificationAttemptSucceeded,
-		output.LatestNotificationAttemptTime,
-		output.LatestNotificationError,
-		output.LatestNotificationTime,
-		output.StartLoggingTime,
-		output.StopLoggingTime,
-		output.TimeLoggingStarted,
-		output.TimeLoggingStopped,
-	}, nil
+	return output, nil
 }
 
 // getEventSelectors retrieves the event selectors for a single trail.

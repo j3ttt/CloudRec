@@ -56,7 +56,6 @@ func GetPlatformConfig() *schema.Platform {
 			ec2.GetNetworkAclResource(),
 			ec2.GetSecurityGroupResource(),
 			ec2.GetVPCResource(),
-			ec2.GetVPCResource(),
 			ec2.GetVpcEndpointServiceResource(),
 			ec2.GetFlowLogResource(),
 			ec2.GetNetworkInterfaceResource(),

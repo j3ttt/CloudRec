@@ -162,12 +162,17 @@ func getPolicy(ctx context.Context, c *lambda.Client, functionName *string) (map
 
 // listFunctionURLConfigs retrieves the URL configs for a function.
 func listFunctionURLConfigs(ctx context.Context, c *lambda.Client, functionName *string) ([]types.FunctionUrlConfig, error) {
-	output, err := c.ListFunctionUrlConfigs(ctx, &lambda.ListFunctionUrlConfigsInput{FunctionName: functionName})
-	if err != nil {
-		log.CtxLogger(ctx).Debug("failed to list function url configs", zap.String("functionName", *functionName), zap.Error(err))
-		return nil, err
+	var urlConfigs []types.FunctionUrlConfig
+	paginator := lambda.NewListFunctionUrlConfigsPaginator(c, &lambda.ListFunctionUrlConfigsInput{FunctionName: functionName})
+	for paginator.HasMorePages() {
+		output, err := paginator.NextPage(ctx)
+		if err != nil {
+			log.CtxLogger(ctx).Debug("failed to list function url configs", zap.String("functionName", *functionName), zap.Error(err))
+			return nil, err
+		}
+		urlConfigs = append(urlConfigs, output.FunctionUrlConfigs...)
 	}
-	return output.FunctionUrlConfigs, nil
+	return urlConfigs, nil
 }
 
 // listTags retrieves all tags for a function.
