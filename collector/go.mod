@@ -92,22 +92,28 @@ require (
 	github.com/aliyun/alibabacloud-oss-go-sdk-v2 v1.2.1 // indirect
 	github.com/aliyun/credentials-go v1.4.5 // indirect
 	github.com/aws/aws-sdk-go v1.44.320 // indirect
-	github.com/aws/aws-sdk-go-v2 v1.37.0 // indirect
+	github.com/aws/aws-sdk-go-v2 v1.37.1 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.7.0 // indirect
 	github.com/aws/aws-sdk-go-v2/config v1.27.35 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.33 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.13 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.0 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.7.0 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.1 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.7.1 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.8.1 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/v4a v1.3.21 // indirect
+	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.41.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/account v1.25.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/acm v1.34.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/apigatewayv2 v1.29.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/appstream v1.46.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.54.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/cloudformation v1.61.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.41.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.49.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.45.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.54.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.30.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.54.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.53.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.44.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.237.0 // indirect
@@ -118,9 +124,11 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/elasticache v1.44.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.28.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.38.2 // indirect
+	github.com/aws/aws-sdk-go-v2/service/fms v1.41.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/fsx v1.49.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/guardduty v1.57.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/iam v1.38.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.39.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.13.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.4.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.10.18 // indirect
@@ -132,7 +140,10 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/route53 v1.46.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.27.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.66.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.36.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/securityhub v1.59.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sns v1.34.8 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sqs v1.39.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sso v1.22.8 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.26.8 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.30.8 // indirect

@@ -23,14 +23,19 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/account"
+	"github.com/aws/aws-sdk-go-v2/service/accessanalyzer"
+	"github.com/aws/aws-sdk-go-v2/service/appstream"
 	"github.com/aws/aws-sdk-go-v2/service/autoscaling"
 	"github.com/aws/aws-sdk-go-v2/service/cloudformation"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	"github.com/aws/aws-sdk-go-v2/service/cloudtrail"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentity"
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go-v2/service/configservice"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ecr"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	"github.com/aws/aws-sdk-go-v2/service/efs"
@@ -38,22 +43,27 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/elasticache"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
+	"github.com/aws/aws-sdk-go-v2/service/fms"
 	"github.com/aws/aws-sdk-go-v2/service/fsx"
 	"github.com/aws/aws-sdk-go-v2/service/guardduty"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
+	"github.com/aws/aws-sdk-go-v2/service/inspector2"
 	"github.com/aws/aws-sdk-go-v2/service/kms"
+	"github.com/aws/aws-sdk-go-v2/service/securityhub"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/route53"
 	"github.com/aws/aws-sdk-go-v2/service/route53domains"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/sns"
+	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/aws/aws-sdk-go-v2/service/wafv2"
+	"github.com/aws/aws-sdk-go-v2/service/acm"
+	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
+	"github.com/aws/aws-sdk-go-v2/service/apigatewayv2"
 	"github.com/aws/smithy-go/logging"
 	"github.com/core-sdk/log"
 	"github.com/core-sdk/schema"
-
-	"github.com/aws/aws-sdk-go-v2/service/ec2"
 )
 
 // Services contains regional client of AWS services
@@ -74,6 +84,9 @@ type Services struct {
 	CloudFront       *cloudfront.Client
 	WAFv2            *wafv2.Client
 	CloudTrail       *cloudtrail.Client
+	APIGatewayV2     *apigatewayv2.Client
+	ACM              *acm.Client
+	SecretsManager   *secretsmanager.Client
 	AutoScaling      *autoscaling.Client
 	ECS              *ecs.Client
 	EKS              *eks.Client
@@ -82,10 +95,18 @@ type Services struct {
 	GuardDuty        *guardduty.Client
 	EFS              *efs.Client
 	SNS              *sns.Client
+	SQS              *sqs.Client
 	CloudWatch       *cloudwatch.Client
 	CloudWatchLogs   *cloudwatchlogs.Client
 	Account          *account.Client
 	Config           *configservice.Client
+	AppStream        *appstream.Client
+	AccessAnalyzer   *accessanalyzer.Client
+	CognitoIdentityProvider *cognitoidentityprovider.Client
+	CognitoIdentity         *cognitoidentity.Client
+	FMS              *fms.Client
+	Inspector2       *inspector2.Client
+	SecurityHub      *securityhub.Client
 }
 
 // Clone creates a new instance of Services
@@ -165,6 +186,27 @@ func (s *Services) InitServices(cloudAccountParam schema.CloudAccountParam) (err
 		s.Account = initAccountClient(cfg)
 	case Config:
 		s.Config = initConfigServiceClient(cfg)
+	case AppStreamFleet:
+		s.AppStream = initAppStreamClient(cfg)
+	case APIGatewayV2API:
+		s.APIGatewayV2 = initAPIGatewayV2Client(cfg)
+	case Certificate:
+		s.ACM = initACMClient(cfg)
+	case Secret:
+		s.SecretsManager = initSecretsManagerClient(cfg)
+	case SQSQueue:
+		s.SQS = initSQSClient(cfg)
+	case AccessAnalyzer:
+		s.AccessAnalyzer = initAccessAnalyzerClient(cfg)
+	case CognitoUserPool, CognitoIdentityPool:
+		s.CognitoIdentityProvider = initCognitoIdentityProviderClient(cfg)
+		s.CognitoIdentity = initCognitoIdentityClient(cfg)
+	case FMS:
+		s.FMS = initFMSClient(cfg)
+	case Inspector2:
+		s.Inspector2 = initInspector2Client(cfg)
+	case SecurityHub:
+		s.SecurityHub = initSecurityHubClient(cfg)
 	}
 
 	return nil
@@ -280,6 +322,50 @@ func initCloudFormationClient(cfg aws.Config) *cloudformation.Client {
 
 func initSNSClient(cfg aws.Config) *sns.Client {
 	return sns.NewFromConfig(cfg)
+}
+
+func initSQSClient(cfg aws.Config) *sqs.Client {
+	return sqs.NewFromConfig(cfg)
+}
+
+func initAppStreamClient(cfg aws.Config) *appstream.Client {
+	return appstream.NewFromConfig(cfg)
+}
+
+func initAPIGatewayV2Client(cfg aws.Config) *apigatewayv2.Client {
+	return apigatewayv2.NewFromConfig(cfg)
+}
+
+func initACMClient(cfg aws.Config) *acm.Client {
+	return acm.NewFromConfig(cfg)
+}
+
+func initSecretsManagerClient(cfg aws.Config) *secretsmanager.Client {
+	return secretsmanager.NewFromConfig(cfg)
+}
+
+func initAccessAnalyzerClient(cfg aws.Config) *accessanalyzer.Client {
+	return accessanalyzer.NewFromConfig(cfg)
+}
+
+func initCognitoIdentityProviderClient(cfg aws.Config) *cognitoidentityprovider.Client {
+	return cognitoidentityprovider.NewFromConfig(cfg)
+}
+
+func initCognitoIdentityClient(cfg aws.Config) *cognitoidentity.Client {
+	return cognitoidentity.NewFromConfig(cfg)
+}
+
+func initFMSClient(cfg aws.Config) *fms.Client {
+	return fms.NewFromConfig(cfg)
+}
+
+func initInspector2Client(cfg aws.Config) *inspector2.Client {
+	return inspector2.NewFromConfig(cfg)
+}
+
+func initSecurityHubClient(cfg aws.Config) *securityhub.Client {
+	return securityhub.NewFromConfig(cfg)
 }
 
 // BuildConfigWithRegion returns validate aws route with the region passed in

@@ -18,12 +18,14 @@ package platform
 import (
 	"github.com/cloudrec/aws/collector"
 	"github.com/cloudrec/aws/collector/account"
+	"github.com/cloudrec/aws/collector/accessanalyzer"
 	"github.com/cloudrec/aws/collector/appstream"
 	"github.com/cloudrec/aws/collector/autoscaling"
 	"github.com/cloudrec/aws/collector/cloudformation"
 	"github.com/cloudrec/aws/collector/cloudfront"
 	"github.com/cloudrec/aws/collector/cloudtrail"
 	"github.com/cloudrec/aws/collector/cloudwatch"
+	"github.com/cloudrec/aws/collector/cognito"
 	"github.com/cloudrec/aws/collector/config"
 	"github.com/cloudrec/aws/collector/dynamodb"
 	"github.com/cloudrec/aws/collector/ec2"
@@ -33,15 +35,23 @@ import (
 	"github.com/cloudrec/aws/collector/eks"
 	"github.com/cloudrec/aws/collector/elasticache"
 	"github.com/cloudrec/aws/collector/elasticloadbalancing"
+	"github.com/cloudrec/aws/collector/fms"
 	"github.com/cloudrec/aws/collector/fsx"
 	"github.com/cloudrec/aws/collector/guardduty"
 	"github.com/cloudrec/aws/collector/iam"
+	"github.com/cloudrec/aws/collector/inspector2"
 	"github.com/cloudrec/aws/collector/kms"
+	"github.com/cloudrec/aws/collector/securityhub"
+	"github.com/cloudrec/aws/collector/apigateway"
 	"github.com/cloudrec/aws/collector/lambda"
 	"github.com/cloudrec/aws/collector/rds"
 	"github.com/cloudrec/aws/collector/route53"
 	"github.com/cloudrec/aws/collector/s3"
 	"github.com/cloudrec/aws/collector/wafv2"
+	"github.com/cloudrec/aws/collector/acm"
+	"github.com/cloudrec/aws/collector/secretsmanager"
+	"github.com/cloudrec/aws/collector/sns"
+	"github.com/cloudrec/aws/collector/sqs"
 	"github.com/core-sdk/constant"
 	"github.com/core-sdk/schema"
 )
@@ -91,6 +101,19 @@ func GetPlatformConfig() *schema.Platform {
 			cloudwatch.GetAlarmResource(),
 			cloudwatch.GetLogGroupResource(),
 			account.GetAccountResource(),
+			appstream.GetFleetResource(),
+		apigateway.GetAPIV2Resource(),
+		acm.GetCertificateResource(),
+		secretsmanager.GetSecretResource(),
+		sns.GetSNSTopicResource(),
+		sqs.GetSQSQueueResource(),
+		accessanalyzer.GetAnalyzerResource(),
+		cognito.GetUserPoolResource(),
+		cognito.GetIdentityPoolResource(),
+		fms.GetPolicyResource(),
+		inspector2.GetFindingResource(),
+		inspector2.GetCoverageResource(),
+		securityhub.GetFindingResource(),
 		},
 		Service: &collector.Services{},
 
