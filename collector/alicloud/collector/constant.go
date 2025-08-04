@@ -78,4 +78,10 @@ const (
 	Yundun               = "Yundun"
 	APIG                 = "APIG"
 	ResourceCenter       = "ResourceCenter"
+	DTSInstance          = "DTS Instance"
+	ECIContainerGroup    = "ECI ContainerGroup"
+	ECIImageCache        = "ECI ImageCache"
+	ECPInstance          = "ECP Instance"
+	EfloCluster          = "Eflo Cluster"
+	EfloNode             = "Eflo Node"
 )

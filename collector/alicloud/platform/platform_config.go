@@ -40,7 +40,10 @@ import (
 	"github.com/cloudrec/alicloud/collector/ddos"
 	"github.com/cloudrec/alicloud/collector/dms"
 	"github.com/cloudrec/alicloud/collector/dns"
+	"github.com/cloudrec/alicloud/collector/dts"
+	"github.com/cloudrec/alicloud/collector/eci"
 	"github.com/cloudrec/alicloud/collector/ecs"
+	"github.com/cloudrec/alicloud/collector/eflo"
 	"github.com/cloudrec/alicloud/collector/elasticsearch"
 	"github.com/cloudrec/alicloud/collector/ens"
 	"github.com/cloudrec/alicloud/collector/ess"
@@ -144,6 +147,8 @@ func GetPlatformConfig() *schema.Platform {
 			maxcompute.GetMaxComputeResource(),
 			cloudfw.GetCloudFWResource(),
 			cloudfw.GetCloudFWConfigResource(),
+			eflo.GetEfloClusterResource(),
+			eflo.GetEfloNodeResource(),
 			adbmysql.GetAnalyticDBMySQLResource(),
 			adbpostgresql.GetAnalyticDBPostgreSQLResource(),
 			hbase.GetHbaseResource(),
@@ -178,6 +183,9 @@ func GetPlatformConfig() *schema.Platform {
 			tablestore.GetTablestoreResource(),
 			yundun.GetResource(),
 			apig.GetDomainData(),
+			dts.GetDTSInstanceResource(),
+			eci.GetECIContainerGroupResource(),
+			eci.GetECIImageCacheResource(),
 		},
 
 		Service:        &collector.Services{},
