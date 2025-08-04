@@ -48,7 +48,6 @@ func GetCoverageResource() schema.Resource {
 // CoverageDetail aggregates all information for a single Inspector2 coverage.
 type CoverageDetail struct {
 	Coverage types.CoveredResource
-	Tags     map[string]string
 }
 
 // GetCoverageDetail fetches the details for all Inspector2 coverage in a region.
@@ -70,10 +69,8 @@ func GetCoverageDetail(ctx context.Context, service schema.ServiceInterface, res
 		go func() {
 			defer wg.Done()
 			for coverage := range tasks {
-				coverage := coverage
-				detail := describeCoverageDetail(ctx, client, coverage)
-				if detail != nil {
-					res <- detail
+				res <- &CoverageDetail{
+					Coverage: coverage,
 				}
 			}
 		}()
@@ -105,12 +102,4 @@ func listCoverage(ctx context.Context, c *inspector2.Client) ([]types.CoveredRes
 		coverage = append(coverage, page.CoveredResources...)
 	}
 	return coverage, nil
-}
-
-// describeCoverageDetail fetches all details for a single coverage.
-func describeCoverageDetail(ctx context.Context, client *inspector2.Client, coverage types.CoveredResource) *CoverageDetail {
-
-	return &CoverageDetail{
-		Coverage: coverage,
-	}
 }
