@@ -76,7 +76,7 @@ func GetDTSInstanceDetail(ctx context.Context, service schema.ServiceInterface, 
 
 		count += int64(response.PageRecordCount)
 
-		if count >= response.TotalRecordCount {
+		if count >= response.TotalRecordCount || response.PageRecordCount == 0 {
 			break
 		}
 		request.PageNum = requests.NewInteger(response.PageNumber + 1)
