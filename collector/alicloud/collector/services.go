@@ -18,6 +18,7 @@ package collector
 import (
 	"context"
 	resourcecenter20221201 "github.com/alibabacloud-go/resourcecenter-20221201/client"
+	"github.com/aliyun/alibaba-cloud-sdk-go/services/eflo"
 	"github.com/aliyun/alibaba-cloud-sdk-go/services/ens"
 	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss"
 	ossCredentials "github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss/credentials"
@@ -73,6 +74,8 @@ import (
 	"github.com/aliyun/alibaba-cloud-sdk-go/services/alikafka"
 	"github.com/aliyun/alibaba-cloud-sdk-go/services/cdn"
 	"github.com/aliyun/alibaba-cloud-sdk-go/services/clickhouse"
+	"github.com/aliyun/alibaba-cloud-sdk-go/services/dts"
+	"github.com/aliyun/alibaba-cloud-sdk-go/services/eci"
 	"github.com/aliyun/alibaba-cloud-sdk-go/services/ecs"
 	"github.com/aliyun/alibaba-cloud-sdk-go/services/hbase"
 	"github.com/aliyun/alibaba-cloud-sdk-go/services/ram"
@@ -165,6 +168,9 @@ type Services struct {
 	DDoS            *ddoscoo20200101.Client
 	APIG            *apig20240327.Client
 	ResourceCenter  *resourcecenter20221201.Client
+	DTS             *dts.Client
+	ECI             *eci.Client
+	Eflo            *eflo.Client
 }
 
 // Clone creates a new instance of Services with copied configuration
@@ -434,6 +440,21 @@ func (s *Services) InitServices(cloudAccountParam schema.CloudAccountParam) (err
 		if err != nil {
 			log.CtxLogger(ctx).Warn("init resourcecenter client failed", zap.Error(err))
 		}
+	case DTSInstance:
+		s.DTS, err = dts.NewClientWithAccessKey(param.Region, param.AK, param.SK)
+		if err != nil {
+			log.CtxLogger(ctx).Warn("init dts client failed", zap.Error(err))
+		}
+	case ECIContainerGroup, ECIImageCache:
+		s.ECI, err = eci.NewClientWithAccessKey(param.Region, param.AK, param.SK)
+		if err != nil {
+			log.CtxLogger(ctx).Warn("init eci client failed", zap.Error(err))
+		}
+		//case EfloCluster, EfloNode:
+		//	s.Eflo, err = eflo.NewClientWithAccessKey(param.Region, param.AK, param.SK)
+		//	if err != nil {
+		//		log.CtxLogger(ctx).Warn("init eflo client failed", zap.Error(err))
+		//	}
 	}
 
 	return nil
