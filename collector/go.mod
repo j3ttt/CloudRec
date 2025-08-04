@@ -136,6 +136,9 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.18.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/kms v1.41.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.73.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/macie2 v1.46.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.52.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/opensearch v1.49.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/rds v1.90.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/route53 v1.46.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.27.6 // indirect

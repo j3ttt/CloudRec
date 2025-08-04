@@ -69,4 +69,9 @@ const (
 	FMS                 string = "FMS"
 	Inspector2          string = "Inspector2"
 	SecurityHub         string = "SecurityHub"
+	MacieFinding        string = "MacieFinding"
+	MacieJob            string = "MacieJob"
+	MacieSession        string = "MacieSession"
+	NetworkFirewall     string = "NetworkFirewall"
+	OpenSearch          string = "OpenSearch"
 )

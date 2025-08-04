@@ -38,6 +38,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.39.1
 	github.com/aws/aws-sdk-go-v2/service/kms v1.41.3
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.73.0
+	github.com/aws/aws-sdk-go-v2/service/macie2 v1.46.1
 	github.com/aws/aws-sdk-go-v2/service/rds v1.90.0
 	github.com/aws/aws-sdk-go-v2/service/route53 v1.46.2
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.27.6

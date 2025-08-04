@@ -61,6 +61,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/acm"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 	"github.com/aws/aws-sdk-go-v2/service/apigatewayv2"
+	"github.com/aws/aws-sdk-go-v2/service/macie2"
+	"github.com/aws/aws-sdk-go-v2/service/networkfirewall"
+	"github.com/aws/aws-sdk-go-v2/service/opensearch"
 	"github.com/aws/smithy-go/logging"
 	"github.com/core-sdk/log"
 	"github.com/core-sdk/schema"
@@ -107,6 +110,9 @@ type Services struct {
 	FMS              *fms.Client
 	Inspector2       *inspector2.Client
 	SecurityHub      *securityhub.Client
+	Macie            *macie2.Client
+	NetworkFirewall  *networkfirewall.Client
+	OpenSearch       *opensearch.Client
 }
 
 // Clone creates a new instance of Services
@@ -207,6 +213,12 @@ func (s *Services) InitServices(cloudAccountParam schema.CloudAccountParam) (err
 		s.Inspector2 = initInspector2Client(cfg)
 	case SecurityHub:
 		s.SecurityHub = initSecurityHubClient(cfg)
+	case MacieFinding, MacieJob, MacieSession:
+		s.Macie = initMacieClient(cfg)
+	case NetworkFirewall:
+		s.NetworkFirewall = initNetworkFirewallClient(cfg)
+	case OpenSearch:
+		s.OpenSearch = initOpenSearchClient(cfg)
 	}
 
 	return nil
@@ -366,6 +378,18 @@ func initInspector2Client(cfg aws.Config) *inspector2.Client {
 
 func initSecurityHubClient(cfg aws.Config) *securityhub.Client {
 	return securityhub.NewFromConfig(cfg)
+}
+
+func initMacieClient(cfg aws.Config) *macie2.Client {
+	return macie2.NewFromConfig(cfg)
+}
+
+func initNetworkFirewallClient(cfg aws.Config) *networkfirewall.Client {
+	return networkfirewall.NewFromConfig(cfg)
+}
+
+func initOpenSearchClient(cfg aws.Config) *opensearch.Client {
+	return opensearch.NewFromConfig(cfg)
 }
 
 // BuildConfigWithRegion returns validate aws route with the region passed in
