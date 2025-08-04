@@ -17,6 +17,7 @@ package dts
 
 import (
 	"context"
+	"github.com/aliyun/alibaba-cloud-sdk-go/sdk/requests"
 	"github.com/aliyun/alibaba-cloud-sdk-go/services/dts"
 	"github.com/cloudrec/alicloud/collector"
 	"github.com/core-sdk/constant"
@@ -52,24 +53,33 @@ func GetDTSInstanceDetail(ctx context.Context, service schema.ServiceInterface, 
 	// 1. DescirbeMigrationJobs - 获取DTS迁移任务列表
 	request := dts.CreateDescirbeMigrationJobsRequest()
 	request.Scheme = "https"
-
-	response, err := cli.DescirbeMigrationJobs(request)
-	if err != nil {
-		log.CtxLogger(ctx).Warn("DescirbeMigrationJobs error", zap.Error(err))
-		return err
-	}
-
-	// 遍历所有DTS迁移任务
-	for _, job := range response.MigrationJobs.MigrationJob {
-		// 2. DescribeMigrationJobDetail - 获取DTS迁移任务详细信息
-		jobDetail := describeMigrationJobDetail(ctx, cli, job.MigrationJobID)
-
-		detail := DTSInstanceDetail{
-			MigrationJob:       job,
-			MigrationJobDetail: jobDetail,
+	var count int64 = 0
+	for {
+		response, err := cli.DescirbeMigrationJobs(request)
+		if err != nil {
+			log.CtxLogger(ctx).Warn("DescirbeMigrationJobs error", zap.Error(err))
+			return err
 		}
 
-		res <- detail
+		// 遍历所有DTS迁移任务
+		for _, job := range response.MigrationJobs.MigrationJob {
+			// 2. DescribeMigrationJobDetail - 获取DTS迁移任务详细信息
+			jobDetail := describeMigrationJobDetail(ctx, cli, job.MigrationJobID)
+
+			detail := DTSInstanceDetail{
+				MigrationJob:       job,
+				MigrationJobDetail: jobDetail,
+			}
+
+			res <- detail
+		}
+
+		count += int64(response.PageRecordCount)
+
+		if count >= response.TotalRecordCount {
+			break
+		}
+		request.PageNum = requests.NewInteger(response.PageNumber + 1)
 	}
 
 	return nil

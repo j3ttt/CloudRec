@@ -52,19 +52,25 @@ func GetECIContainerGroupDetail(ctx context.Context, service schema.ServiceInter
 	request := eci.CreateDescribeContainerGroupsRequest()
 	request.Scheme = "https"
 
-	response, err := cli.DescribeContainerGroups(request)
-	if err != nil {
-		log.CtxLogger(ctx).Warn("DescribeContainerGroups error", zap.Error(err))
-		return err
-	}
-
-	// 处理容器组
-	for _, cg := range response.ContainerGroups {
-		detail := ECIContainerGroupDetail{
-			ContainerGroup: cg,
+	for {
+		response, err := cli.DescribeContainerGroups(request)
+		if err != nil {
+			log.CtxLogger(ctx).Warn("DescribeContainerGroups error", zap.Error(err))
+			return err
 		}
 
-		res <- detail
+		// 处理容器组
+		for _, cg := range response.ContainerGroups {
+			detail := ECIContainerGroupDetail{
+				ContainerGroup: cg,
+			}
+
+			res <- detail
+		}
+		if response.NextToken == "" {
+			break
+		}
+		request.NextToken = response.NextToken
 	}
 
 	return nil
