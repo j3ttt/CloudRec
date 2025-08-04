@@ -450,11 +450,6 @@ func (s *Services) InitServices(cloudAccountParam schema.CloudAccountParam) (err
 		if err != nil {
 			log.CtxLogger(ctx).Warn("init eci client failed", zap.Error(err))
 		}
-		//case EfloCluster, EfloNode:
-		//	s.Eflo, err = eflo.NewClientWithAccessKey(param.Region, param.AK, param.SK)
-		//	if err != nil {
-		//		log.CtxLogger(ctx).Warn("init eflo client failed", zap.Error(err))
-		//	}
 	}
 
 	return nil
