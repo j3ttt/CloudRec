@@ -49,7 +49,6 @@ func GetDomainResource() schema.Resource {
 // DomainDetail aggregates all information for a single OpenSearch domain.
 type DomainDetail struct {
 	Domain *opensearch.DescribeDomainOutput
-	Tags   map[string]string
 }
 
 // GetDomainDetail fetches the details for all OpenSearch domains in a region.
@@ -97,7 +96,7 @@ func listDomains(ctx context.Context, c *opensearch.Client) ([]types.DomainInfo,
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return output.DomainNames, nil
 }
 
@@ -113,78 +112,7 @@ func describeDomainDetail(ctx context.Context, client *opensearch.Client, domain
 		return nil
 	}
 
-	var tags map[string]string
-
-	// Get tags - OpenSearch domains don't have a direct API to list tags
-	// but we can extract relevant information from the domain itself
-	tags = extractDomainTags(describeOutput)
-
 	return &DomainDetail{
 		Domain: describeOutput,
-		Tags:   tags,
 	}
-}
-
-// extractDomainTags extracts relevant information from a domain as tags
-func extractDomainTags(domain *opensearch.DescribeDomainOutput) map[string]string {
-	tags := make(map[string]string)
-
-	// Extract some key information from the domain as tags
-	if domain.DomainStatus != nil {
-		if domain.DomainStatus.EngineVersion != nil {
-			tags["EngineVersion"] = *domain.DomainStatus.EngineVersion
-		}
-		
-		if domain.DomainStatus.Created != nil {
-			if *domain.DomainStatus.Created {
-				tags["Created"] = "true"
-			} else {
-				tags["Created"] = "false"
-			}
-		}
-		
-		if domain.DomainStatus.Deleted != nil {
-			if *domain.DomainStatus.Deleted {
-				tags["Deleted"] = "true"
-			} else {
-				tags["Deleted"] = "false"
-			}
-		}
-		
-		if domain.DomainStatus.Processing != nil {
-			if *domain.DomainStatus.Processing {
-				tags["Processing"] = "true"
-			} else {
-				tags["Processing"] = "false"
-			}
-		}
-		
-		// Add cluster configuration information
-		if domain.DomainStatus.ClusterConfig != nil {
-			if domain.DomainStatus.ClusterConfig.InstanceType != "" {
-				tags["InstanceType"] = string(domain.DomainStatus.ClusterConfig.InstanceType)
-			}
-			
-			if domain.DomainStatus.ClusterConfig.InstanceCount != nil {
-				tags["InstanceCount"] = string(*domain.DomainStatus.ClusterConfig.InstanceCount)
-			}
-			
-			if domain.DomainStatus.ClusterConfig.DedicatedMasterEnabled != nil {
-				if *domain.DomainStatus.ClusterConfig.DedicatedMasterEnabled {
-					tags["DedicatedMasterEnabled"] = "true"
-				} else {
-					tags["DedicatedMasterEnabled"] = "false"
-				}
-			} else {
-				tags["DedicatedMasterEnabled"] = "false"
-			}
-		}
-		
-		// Add endpoint information
-		if domain.DomainStatus.Endpoint != nil {
-			tags["Endpoint"] = *domain.DomainStatus.Endpoint
-		}
-	}
-
-	return tags
 }

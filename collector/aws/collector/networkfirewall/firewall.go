@@ -17,7 +17,6 @@ package networkfirewall
 
 import (
 	"context"
-	"strconv"
 	"sync"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -51,7 +50,6 @@ func GetFirewallResource() schema.Resource {
 // FirewallDetail aggregates all information for a single Network Firewall.
 type FirewallDetail struct {
 	Firewall *networkfirewall.DescribeFirewallOutput
-	Tags     map[string]string
 }
 
 // GetFirewallDetail fetches the details for all Network Firewalls in a region.
@@ -121,51 +119,7 @@ func describeFirewallDetail(ctx context.Context, client *networkfirewall.Client,
 		return nil
 	}
 
-	var tags map[string]string
-
-	// Get tags - Network Firewall doesn't have a direct API to list tags
-	// but we can extract relevant information from the firewall itself
-	tags = extractFirewallTags(describeOutput)
-
 	return &FirewallDetail{
 		Firewall: describeOutput,
-		Tags:     tags,
 	}
-}
-
-// extractFirewallTags extracts relevant information from a firewall as tags
-func extractFirewallTags(firewall *networkfirewall.DescribeFirewallOutput) map[string]string {
-	tags := make(map[string]string)
-
-	// Extract some key information from the firewall as tags
-	if firewall.Firewall != nil {
-		if firewall.Firewall.VpcId != nil {
-			tags["VpcId"] = *firewall.Firewall.VpcId
-		}
-
-		if firewall.Firewall.FirewallPolicyArn != nil {
-			tags["FirewallPolicyArn"] = *firewall.Firewall.FirewallPolicyArn
-		}
-
-		// Add subnet mappings
-		if len(firewall.Firewall.SubnetMappings) > 0 {
-			tags["SubnetCount"] = strconv.Itoa(len(firewall.Firewall.SubnetMappings))
-		}
-
-		// Add delete protection status
-		if firewall.Firewall.DeleteProtection {
-			tags["DeleteProtection"] = "enabled"
-		} else {
-			tags["DeleteProtection"] = "disabled"
-		}
-
-		// Add policy change protection status
-		if firewall.Firewall.FirewallPolicyChangeProtection {
-			tags["PolicyChangeProtection"] = "enabled"
-		} else {
-			tags["PolicyChangeProtection"] = "disabled"
-		}
-	}
-
-	return tags
 }

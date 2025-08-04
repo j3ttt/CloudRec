@@ -29,7 +29,6 @@ import (
 	"go.uber.org/zap"
 )
 
-
 // GetRuleGroupResource returns AWS Network Firewall Rule Group resource definition
 func GetRuleGroupResource() schema.Resource {
 	return schema.Resource{
@@ -49,7 +48,6 @@ func GetRuleGroupResource() schema.Resource {
 // RuleGroupDetail aggregates all information for a single Network Firewall Rule Group.
 type RuleGroupDetail struct {
 	RuleGroup *networkfirewall.DescribeRuleGroupOutput
-	Tags      map[string]string
 }
 
 // GetRuleGroupDetail fetches the details for all Network Firewall Rule Groups in a region.
@@ -119,53 +117,7 @@ func describeRuleGroupDetail(ctx context.Context, client *networkfirewall.Client
 		return nil
 	}
 
-	var tags map[string]string
-
-	// Get tags - Network Firewall Rule Group doesn't have a direct API to list tags
-	// but we can extract relevant information from the rule group itself
-	tags = extractRuleGroupTags(describeOutput)
-
 	return &RuleGroupDetail{
 		RuleGroup: describeOutput,
-		Tags:      tags,
 	}
-}
-
-// extractRuleGroupTags extracts relevant information from a rule group as tags
-func extractRuleGroupTags(ruleGroup *networkfirewall.DescribeRuleGroupOutput) map[string]string {
-	tags := make(map[string]string)
-
-	// Extract some key information from the rule group as tags
-	if ruleGroup.RuleGroup != nil {
-		if ruleGroup.RuleGroup.RuleVariables != nil {
-			tags["HasRuleVariables"] = "true"
-		} else {
-			tags["HasRuleVariables"] = "false"
-		}
-		
-		// Add rule count information
-		if ruleGroup.RuleGroup.RulesSource != nil {
-			if ruleGroup.RuleGroup.RulesSource.RulesString != nil {
-				tags["RulesSourceType"] = "RulesString"
-			} else if ruleGroup.RuleGroup.RulesSource.StatefulRules != nil {
-				tags["RulesSourceType"] = "StatefulRules"
-				tags["StatefulRulesCount"] = string(rune(len(ruleGroup.RuleGroup.RulesSource.StatefulRules)))
-			} else if ruleGroup.RuleGroup.RulesSource.StatelessRulesAndCustomActions != nil {
-				tags["RulesSourceType"] = "StatelessRulesAndCustomActions"
-				if ruleGroup.RuleGroup.RulesSource.StatelessRulesAndCustomActions.StatelessRules != nil {
-					tags["StatelessRulesCount"] = string(rune(len(ruleGroup.RuleGroup.RulesSource.StatelessRulesAndCustomActions.StatelessRules)))
-				}
-			}
-		}
-		
-		// Add capacity information
-		if ruleGroup.RuleGroupResponse.Capacity != nil {
-			tags["Capacity"] = string(rune(*ruleGroup.RuleGroupResponse.Capacity))
-		}
-		
-		// Add type information
-		tags["Type"] = string(ruleGroup.RuleGroupResponse.Type)
-	}
-
-	return tags
 }
