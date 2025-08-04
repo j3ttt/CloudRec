@@ -43,7 +43,6 @@ import (
 	"github.com/cloudrec/alicloud/collector/dts"
 	"github.com/cloudrec/alicloud/collector/eci"
 	"github.com/cloudrec/alicloud/collector/ecs"
-	"github.com/cloudrec/alicloud/collector/eflo"
 	"github.com/cloudrec/alicloud/collector/elasticsearch"
 	"github.com/cloudrec/alicloud/collector/ens"
 	"github.com/cloudrec/alicloud/collector/ess"
@@ -147,8 +146,6 @@ func GetPlatformConfig() *schema.Platform {
 			maxcompute.GetMaxComputeResource(),
 			cloudfw.GetCloudFWResource(),
 			cloudfw.GetCloudFWConfigResource(),
-			eflo.GetEfloClusterResource(),
-			eflo.GetEfloNodeResource(),
 			adbmysql.GetAnalyticDBMySQLResource(),
 			adbpostgresql.GetAnalyticDBPostgreSQLResource(),
 			hbase.GetHbaseResource(),
@@ -216,7 +213,7 @@ func GetPlatformConfigTest() *schema.Platform {
 	}
 
 	return schema.GetInstance(schema.PlatformConfig{
-		Name:      string(constant.AlibabaCloud),
+		Name: string(constant.AlibabaCloud),
 		Resources: []schema.Resource{
 			//test.TestBlockResource(),
 			//test.TestAutoExitResource(),
