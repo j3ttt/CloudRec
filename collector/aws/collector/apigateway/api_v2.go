@@ -27,6 +27,8 @@ import (
 	"sync"
 )
 
+const maxWorkers = 10
+
 // GetAPIV2Resource returns an API Gateway V2 API Resource
 func GetAPIV2Resource() schema.Resource {
 	return schema.Resource{
@@ -62,16 +64,26 @@ func GetAPIV2Detail(ctx context.Context, service schema.ServiceInterface, res ch
 	}
 
 	var wg sync.WaitGroup
-	for _, api := range apis {
+	tasks := make(chan types.Api, len(apis))
+
+	for i := 0; i < maxWorkers; i++ {
 		wg.Add(1)
-		go func(a types.Api) {
+		go func() {
 			defer wg.Done()
-			detail := describeAPIV2Detail(ctx, client, a)
-			if detail != nil {
-				res <- detail
+			for api := range tasks {
+				detail := describeAPIV2Detail(ctx, client, api)
+				if detail != nil {
+					res <- detail
+				}
 			}
-		}(api)
+		}()
 	}
+
+	for _, api := range apis {
+		tasks <- api
+	}
+	close(tasks)
+
 	wg.Wait()
 
 	return nil

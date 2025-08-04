@@ -17,6 +17,7 @@ package networkfirewall
 
 import (
 	"context"
+	"strconv"
 	"sync"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -141,23 +142,23 @@ func extractFirewallTags(firewall *networkfirewall.DescribeFirewallOutput) map[s
 		if firewall.Firewall.VpcId != nil {
 			tags["VpcId"] = *firewall.Firewall.VpcId
 		}
-		
+
 		if firewall.Firewall.FirewallPolicyArn != nil {
 			tags["FirewallPolicyArn"] = *firewall.Firewall.FirewallPolicyArn
 		}
-		
+
 		// Add subnet mappings
 		if len(firewall.Firewall.SubnetMappings) > 0 {
-			tags["SubnetCount"] = string(rune(len(firewall.Firewall.SubnetMappings)))
+			tags["SubnetCount"] = strconv.Itoa(len(firewall.Firewall.SubnetMappings))
 		}
-		
+
 		// Add delete protection status
 		if firewall.Firewall.DeleteProtection {
 			tags["DeleteProtection"] = "enabled"
 		} else {
 			tags["DeleteProtection"] = "disabled"
 		}
-		
+
 		// Add policy change protection status
 		if firewall.Firewall.FirewallPolicyChangeProtection {
 			tags["PolicyChangeProtection"] = "enabled"

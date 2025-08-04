@@ -96,13 +96,17 @@ func describeFleetDetail(ctx context.Context, client *appstream.Client, fleet ty
 
 func describeFleets(ctx context.Context, c *appstream.Client) ([]types.Fleet, error) {
 	var fleets []types.Fleet
-
 	input := &appstream.DescribeFleetsInput{}
-	output, err := c.DescribeFleets(ctx, input)
-	if err != nil {
-		return nil, err
+	for {
+		output, err := c.DescribeFleets(ctx, input)
+		if err != nil {
+			return nil, err
+		}
+		fleets = append(fleets, output.Fleets...)
+		if output.NextToken == nil {
+			break
+		}
+		input.NextToken = output.NextToken
 	}
-
-	fleets = append(fleets, output.Fleets...)
 	return fleets, nil
 }

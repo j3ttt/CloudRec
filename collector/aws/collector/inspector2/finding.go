@@ -47,32 +47,10 @@ func GetFindingResource() schema.Resource {
 	}
 }
 
-// GetCoverageResource returns AWS Inspector2 coverage resource definition
-func GetCoverageResource() schema.Resource {
-	return schema.Resource{
-		ResourceType:       collector.Inspector2,
-		ResourceTypeName:   "Inspector2 Coverage",
-		ResourceGroupType:  constant.SECURITY,
-		Desc:               "https://docs.aws.amazon.com/inspector/v2/APIReference/API_ListCoverage.html",
-		ResourceDetailFunc: GetCoverageDetail,
-		RowField: schema.RowField{
-			ResourceId:   "$.Coverage.ResourceId",
-			ResourceName: "$.Coverage.ResourceId",
-		},
-		Dimension: schema.Regional,
-	}
-}
-
 // FindingDetail aggregates all information for a single Inspector2 finding.
 type FindingDetail struct {
 	Finding types.Finding
 	Tags    map[string]string
-}
-
-// CoverageDetail aggregates all information for a single Inspector2 coverage.
-type CoverageDetail struct {
-	Coverage types.CoveredResource
-	Tags     map[string]string
 }
 
 // GetFindingDetail fetches the details for all Inspector2 findings in a region.
@@ -112,43 +90,6 @@ func GetFindingDetail(ctx context.Context, service schema.ServiceInterface, res 
 	return nil
 }
 
-// GetCoverageDetail fetches the details for all Inspector2 coverage in a region.
-func GetCoverageDetail(ctx context.Context, service schema.ServiceInterface, res chan<- any) error {
-	client := service.(*collector.Services).Inspector2
-
-	coverage, err := listCoverage(ctx, client)
-	if err != nil {
-		log.CtxLogger(ctx).Error("failed to list Inspector2 coverage", zap.Error(err))
-		return err
-	}
-
-	var wg sync.WaitGroup
-	tasks := make(chan types.CoveredResource, len(coverage))
-
-	// Start worker goroutines
-	for i := 0; i < maxWorkers; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			for coverage := range tasks {
-				detail := describeCoverageDetail(ctx, client, coverage)
-				if detail != nil {
-					res <- detail
-				}
-			}
-		}()
-	}
-
-	// Add tasks
-	for _, coverage := range coverage {
-		tasks <- coverage
-	}
-	close(tasks)
-
-	wg.Wait()
-	return nil
-}
-
 // listFindings retrieves all Inspector2 findings in a region.
 func listFindings(ctx context.Context, c *inspector2.Client) ([]types.Finding, error) {
 	var findings []types.Finding
@@ -167,24 +108,6 @@ func listFindings(ctx context.Context, c *inspector2.Client) ([]types.Finding, e
 	return findings, nil
 }
 
-// listCoverage retrieves all Inspector2 coverage in a region.
-func listCoverage(ctx context.Context, c *inspector2.Client) ([]types.CoveredResource, error) {
-	var coverage []types.CoveredResource
-	input := &inspector2.ListCoverageInput{
-		MaxResults: aws.Int32(100),
-	}
-
-	paginator := inspector2.NewListCoveragePaginator(c, input)
-	for paginator.HasMorePages() {
-		page, err := paginator.NextPage(ctx)
-		if err != nil {
-			return nil, err
-		}
-		coverage = append(coverage, page.CoveredResources...)
-	}
-	return coverage, nil
-}
-
 // describeFindingDetail fetches all details for a single finding.
 func describeFindingDetail(ctx context.Context, client *inspector2.Client, finding types.Finding) *FindingDetail {
 	var tags map[string]string
@@ -198,22 +121,6 @@ func describeFindingDetail(ctx context.Context, client *inspector2.Client, findi
 	return &FindingDetail{
 		Finding: findingCopy,
 		Tags:    tags,
-	}
-}
-
-// describeCoverageDetail fetches all details for a single coverage.
-func describeCoverageDetail(ctx context.Context, client *inspector2.Client, coverage types.CoveredResource) *CoverageDetail {
-	var tags map[string]string
-
-	// Copy the coverage to avoid race conditions
-	coverageCopy := coverage
-
-	// Get tags
-	tags, _ = listCoverageTags(ctx, client, coverageCopy.ResourceId)
-
-	return &CoverageDetail{
-		Coverage: coverageCopy,
-		Tags:     tags,
 	}
 }
 
@@ -233,10 +140,4 @@ func listFindingTags(ctx context.Context, c *inspector2.Client, findingArn *stri
 		tags[key] = value
 	}
 	return tags, nil
-}
-
-// listCoverageTags retrieves tags for a single coverage.
-func listCoverageTags(ctx context.Context, c *inspector2.Client, resourceId *string) (map[string]string, error) {
-	// Coverage resources don't typically have tags, so we return an empty map
-	return make(map[string]string), nil
 }

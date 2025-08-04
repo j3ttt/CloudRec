@@ -48,11 +48,11 @@ func GetSNSTopicResource() schema.Resource {
 
 // SNSTopicDetail aggregates all information for a single SNS topic.
 type SNSTopicDetail struct {
-	Topic        types.Topic
-	Attributes   map[string]string
-	Policy       *map[string]interface{}
+	Topic         types.Topic
+	Attributes    map[string]string
+	Policy        *map[string]interface{}
 	Subscriptions []types.Subscription
-	Tags         []types.Tag
+	Tags          []types.Tag
 }
 
 // GetSNSTopicDetail fetches the details for all SNS topics.
@@ -96,7 +96,7 @@ func describeSNSTopicDetail(ctx context.Context, client *sns.Client, topic types
 	var subscriptions []types.Subscription
 	var tags []types.Tag
 
-	wg.Add(4)
+	wg.Add(3)
 
 	go func() {
 		defer wg.Done()
@@ -136,19 +136,14 @@ func describeSNSTopicDetail(ctx context.Context, client *sns.Client, topic types
 		}
 	}()
 
-	go func() {
-		defer wg.Done()
-		// Additional processing if needed
-	}()
-
 	wg.Wait()
 
 	return &SNSTopicDetail{
-		Topic:        topic,
-		Attributes:   attributes,
-		Policy:       policy,
+		Topic:         topic,
+		Attributes:    attributes,
+		Policy:        policy,
 		Subscriptions: subscriptions,
-		Tags:         tags,
+		Tags:          tags,
 	}
 }
 

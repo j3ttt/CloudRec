@@ -92,7 +92,7 @@ func GetFindingDetail(ctx context.Context, service schema.ServiceInterface, res 
 func listFindings(ctx context.Context, c *macie2.Client) ([]types.Finding, error) {
 	var findings []types.Finding
 	input := &macie2.ListFindingsInput{
-		MaxResults: aws.Int32(100),
+		MaxResults: aws.Int32(50),
 	}
 
 	paginator := macie2.NewListFindingsPaginator(c, input)

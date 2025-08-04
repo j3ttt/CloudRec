@@ -18,7 +18,6 @@ package sqs
 import (
 	"context"
 	"encoding/json"
-	"strings"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/aws/aws-sdk-go-v2/service/sqs/types"
 	"github.com/cloudrec/aws/collector"
@@ -26,6 +25,7 @@ import (
 	"github.com/core-sdk/log"
 	"github.com/core-sdk/schema"
 	"go.uber.org/zap"
+	"strings"
 	"sync"
 )
 
@@ -49,12 +49,12 @@ func GetSQSQueueResource() schema.Resource {
 
 // SQSQueueDetail aggregates all information for a single SQS queue.
 type SQSQueueDetail struct {
-	Url      string
-	Name     string
-	Region   string
+	Url        string
+	Name       string
+	Region     string
 	Attributes map[string]string
-	Policy   *map[string]interface{}
-	Tags     map[string]string
+	Policy     *map[string]interface{}
+	Tags       map[string]string
 }
 
 // GetSQSQueueDetail fetches the details for all SQS queues.
@@ -97,7 +97,7 @@ func describeSQSQueueDetail(ctx context.Context, client *sqs.Client, queue SQSQu
 	var policy *map[string]interface{}
 	var tags map[string]string
 
-	wg.Add(3)
+	wg.Add(2)
 
 	go func() {
 		defer wg.Done()
@@ -127,11 +127,6 @@ func describeSQSQueueDetail(ctx context.Context, client *sqs.Client, queue SQSQu
 		}
 	}()
 
-	go func() {
-		defer wg.Done()
-		// Additional processing if needed
-	}()
-
 	wg.Wait()
 
 	queue.Attributes = attributes
@@ -144,22 +139,22 @@ func describeSQSQueueDetail(ctx context.Context, client *sqs.Client, queue SQSQu
 // listQueues retrieves all SQS queues.
 func listQueues(ctx context.Context, c *sqs.Client) ([]SQSQueueDetail, error) {
 	var queues []SQSQueueDetail
-	
+
 	// Get the region from the client
 	region := c.Options().Region
-	
+
 	maxResults := int32(1000)
 	input := &sqs.ListQueuesInput{
 		MaxResults: &maxResults,
 	}
-	
+
 	paginator := sqs.NewListQueuesPaginator(c, input)
 	for paginator.HasMorePages() {
 		page, err := paginator.NextPage(ctx)
 		if err != nil {
 			return nil, err
 		}
-		
+
 		for _, queueUrl := range page.QueueUrls {
 			// Extract queue name from URL
 			queueName := queueUrl
@@ -169,7 +164,7 @@ func listQueues(ctx context.Context, c *sqs.Client) ([]SQSQueueDetail, error) {
 					queueName = parts[len(parts)-1]
 				}
 			}
-			
+
 			queues = append(queues, SQSQueueDetail{
 				Url:    queueUrl,
 				Name:   queueName,
@@ -177,7 +172,7 @@ func listQueues(ctx context.Context, c *sqs.Client) ([]SQSQueueDetail, error) {
 			})
 		}
 	}
-	
+
 	return queues, nil
 }
 
