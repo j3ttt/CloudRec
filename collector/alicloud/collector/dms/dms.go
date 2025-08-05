@@ -16,13 +16,13 @@
 package dms
 
 import (
-	"github.com/core-sdk/constant"
-	"github.com/core-sdk/log"
-	"github.com/core-sdk/schema"
 	"context"
 	dms "github.com/alibabacloud-go/dms-enterprise-20181101/client"
 	util "github.com/alibabacloud-go/tea-utils/v2/service"
 	"github.com/cloudrec/alicloud/collector"
+	"github.com/core-sdk/constant"
+	"github.com/core-sdk/log"
+	"github.com/core-sdk/schema"
 	"go.uber.org/zap"
 )
 
