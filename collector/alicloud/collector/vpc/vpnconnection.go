@@ -13,13 +13,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package arms
+package vpc
 
 import (
 	"context"
-	arms20190808 "github.com/alibabacloud-go/arms-20190808/v8/client"
-	util "github.com/alibabacloud-go/tea-utils/v2/service"
-	"github.com/alibabacloud-go/tea/tea"
+	"github.com/aliyun/alibaba-cloud-sdk-go/sdk/requests"
+	"github.com/aliyun/alibaba-cloud-sdk-go/services/vpc"
 	"github.com/cloudrec/alicloud/collector"
 	"github.com/core-sdk/constant"
 	"github.com/core-sdk/log"
@@ -27,16 +26,16 @@ import (
 	"go.uber.org/zap"
 )
 
-func GetTraceAppResource() schema.Resource {
+func GetVPNConnectionResource() schema.Resource {
 	return schema.Resource{
-		ResourceType:       collector.TraceApp,
-		ResourceTypeName:   "TraceApp",
-		ResourceGroupType:  constant.CONFIG,
-		Desc:               "https://api.aliyun.com/product/ARMS",
-		ResourceDetailFunc: GetTraceAppDetail,
+		ResourceType:       collector.VpnConnection,
+		ResourceTypeName:   collector.VpnConnection,
+		ResourceGroupType:  constant.NET,
+		Desc:               `https://api.aliyun.com/product/Vpc`,
+		ResourceDetailFunc: GetVpnConnectionDetail,
 		RowField: schema.RowField{
-			ResourceId:   "$.App.AppId",
-			ResourceName: "$.App.AppName",
+			ResourceId:   "$.VpnConnection.VpnConnectionId",
+			ResourceName: "$.VpnConnection.Name",
 		},
 		Regions: []string{
 			"cn-qingdao",
@@ -47,64 +46,67 @@ func GetTraceAppResource() schema.Resource {
 			"cn-hangzhou",
 			"cn-shanghai",
 			"cn-nanjing",
-			"cn-fuzhou",
 			"cn-shenzhen",
 			"cn-heyuan",
 			"cn-guangzhou",
-			"ap-southeast-6",
-			"ap-northeast-2",
-			"ap-southeast-3",
-			"ap-northeast-1",
-			"ap-southeast-7",
 			"cn-chengdu",
-			"ap-southeast-1",
-			"ap-southeast-5",
-			"cn-zhengzhou-jva",
 			"cn-hongkong",
-			"eu-central-1",
+			"ap-northeast-1",
+			"ap-southeast-1",
+			"ap-southeast-3",
+			"ap-southeast-5",
 			"us-east-1",
 			"us-west-1",
 			"eu-west-1",
 			"me-east-1",
+			"eu-central-1",
+			"ap-northeast-2",
+			"ap-southeast-6",
+			"ap-southeast-7",
 			"me-central-1",
+			"cn-fuzhou",
 			"cn-beijing-finance-1",
 			"cn-hangzhou-finance",
 			"cn-shanghai-finance-1",
 			"cn-shenzhen-finance-1",
-			"cn-heyuan-acdr-1",
 		},
 		Dimension: schema.Regional,
 	}
 }
 
-func GetTraceAppDetail(ctx context.Context, service schema.ServiceInterface, res chan<- any) error {
-	services := service.(*collector.Services)
-	cli := services.ARMS
+type VPNConnectionDetail struct {
+	VpnConnection vpc.VpnConnection
+}
 
-	listTraceAppsRequest := &arms20190808.ListTraceAppsRequest{
-		RegionId: tea.String(*cli.RegionId),
-	}
-	runtime := &util.RuntimeOptions{}
-	apps, err := cli.ListTraceAppsWithOptions(listTraceAppsRequest, runtime)
-	if err != nil {
-		log.CtxLogger(ctx).Error("ListTraceAppsWithOptions error", zap.Error(err))
-		return err
-	}
+func GetVpnConnectionDetail(ctx context.Context, service schema.ServiceInterface, res chan<- any) error {
+	cli := service.(*collector.Services).VPC
 
-	// If no data is queried, continue
-	if len(apps.Body.TraceApps) == 0 {
-		return nil
-	}
-	for _, app := range apps.Body.TraceApps {
-		res <- TraceAppDetail{
-			App: app,
+	request := vpc.CreateDescribeVpnConnectionsRequest()
+	request.PageSize = requests.NewInteger(50)
+	request.PageNumber = requests.NewInteger(1)
+
+	count := 0
+	for {
+		response, err := cli.DescribeVpnConnections(request)
+		if err != nil {
+			log.CtxLogger(ctx).Warn("DescribeVpnConnections error", zap.Error(err))
+			return err
 		}
+
+		for _, conn := range response.VpnConnections.VpnConnection {
+			detail := &VPNConnectionDetail{
+				VpnConnection: conn,
+			}
+			res <- detail
+		}
+
+		count += len(response.VpnConnections.VpnConnection)
+		if count >= response.TotalCount {
+			break
+		}
+
+		request.PageNumber = requests.NewInteger(response.PageNumber + 1)
 	}
 
 	return nil
-}
-
-type TraceAppDetail struct {
-	// Monitor application information
-	App *arms20190808.ListTraceAppsResponseBodyTraceApps
 }
