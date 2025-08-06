@@ -63,6 +63,7 @@ import (
 	"github.com/cloudrec/alicloud/collector/redis"
 	"github.com/cloudrec/alicloud/collector/resourcecenter"
 	"github.com/cloudrec/alicloud/collector/rocketmq"
+	"github.com/cloudrec/alicloud/collector/swas"
 	"github.com/cloudrec/alicloud/collector/tablestore"
 	"github.com/cloudrec/alicloud/collector/vpc"
 	"github.com/cloudrec/alicloud/collector/vpc/eip"
@@ -127,6 +128,8 @@ func GetPlatformConfig() *schema.Platform {
 			arms.GetGrafanaWorkspaceResource(),
 			ecs.GetInstanceResource(),
 			ecs.GetSecurityGroupData(),
+			ecs.GetImagesResource(),
+			ecs.GetSnapshotsResource(),
 			vpc.GetVPCResource(),
 			nat.GetNatResource(),
 			oss.GetBucketResource(),
@@ -174,15 +177,19 @@ func GetPlatformConfig() *schema.Platform {
 			ens.GetNetworkResource(),
 			ens.GetNatGatewayResource(),
 			cloudapi.GetCloudAPIResource(),
+			cloudapi.GetAPIGatewayResource(),
 			kms.GetKMSResource(),
 			ack.GetClusterResource(),
 			mse.GetMSEResource(),
 			tablestore.GetTablestoreResource(),
 			yundun.GetResource(),
+			yundun.GetBastionhostResource(),
 			apig.GetDomainData(),
 			dts.GetDTSInstanceResource(),
 			eci.GetECIContainerGroupResource(),
 			eci.GetECIImageCacheResource(),
+			swas.GetInstanceResource(),
+			vpc.GetVPNConnectionResource(),
 		},
 
 		Service:        &collector.Services{},
@@ -213,7 +220,7 @@ func GetPlatformConfigTest() *schema.Platform {
 	}
 
 	return schema.GetInstance(schema.PlatformConfig{
-		Name:      string(constant.AlibabaCloud),
+		Name: string(constant.AlibabaCloud),
 		Resources: []schema.Resource{
 			//test.TestBlockResource(),
 			//test.TestAutoExitResource(),

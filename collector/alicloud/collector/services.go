@@ -75,6 +75,7 @@ import (
 	"github.com/aliyun/alibaba-cloud-sdk-go/services/ens"
 	"github.com/aliyun/alibaba-cloud-sdk-go/services/hbase"
 	"github.com/aliyun/alibaba-cloud-sdk-go/services/ram"
+	"github.com/aliyun/alibaba-cloud-sdk-go/services/swas-open"
 	"github.com/aliyun/alibaba-cloud-sdk-go/services/vpc"
 	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss"
 	ossCredentials "github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss/credentials"
@@ -171,6 +172,7 @@ type Services struct {
 	DTS             *dts.Client
 	ECI             *eci.Client
 	Eflo            *eflo.Client
+	SWAS            *swas_open.Client
 }
 
 // Clone creates a new instance of Services with copied configuration
@@ -191,12 +193,12 @@ func (s *Services) InitServices(cloudAccountParam schema.CloudAccountParam) (err
 	ctx = context.WithValue(ctx, constant.ResourceType, cloudAccountParam.ResourceType)
 	switch cloudAccountParam.ResourceType {
 
-	case ECS, SecurityGroup:
+	case ECS, SecurityGroup, ECSImage, ECSSnapshot:
 		s.ECS, err = ecs.NewClientWithAccessKey(param.Region, param.AK, param.SK)
 		if err != nil {
 			log.CtxLogger(ctx).Warn("init ecs client failed", zap.Error(err))
 		}
-	case VPC, NAT, EIP:
+	case VPC, NAT, EIP, VPNGateway:
 		s.VPC, err = vpc.NewClientWithAccessKey(param.Region, param.AK, param.SK)
 		if err != nil {
 			log.CtxLogger(ctx).Warn("init vpc client failed", zap.Error(err))
@@ -390,7 +392,7 @@ func (s *Services) InitServices(cloudAccountParam schema.CloudAccountParam) (err
 		if err != nil {
 			log.CtxLogger(ctx).Warn("init cen client failed", zap.Error(err))
 		}
-	case CloudAPI:
+	case CloudAPI, APIGateway:
 		s.CloudAPI, err = CreateCloudAPIClient(param.Region, s.Config)
 		if err != nil {
 			log.CtxLogger(ctx).Warn("init cloudAPI client failed", zap.Error(err))
@@ -420,7 +422,7 @@ func (s *Services) InitServices(cloudAccountParam schema.CloudAccountParam) (err
 		if err != nil {
 			log.CtxLogger(ctx).Warn("init ens client failed", zap.Error(err))
 		}
-	case Yundun:
+	case Yundun, Bastionhost:
 		s.YUNDUN, err = createYundunClient(param.Region, s.Config)
 		if err != nil {
 			log.CtxLogger(ctx).Warn("init yundun client failed", zap.Error(err))
@@ -449,6 +451,11 @@ func (s *Services) InitServices(cloudAccountParam schema.CloudAccountParam) (err
 		s.ECI, err = eci.NewClientWithAccessKey(param.Region, param.AK, param.SK)
 		if err != nil {
 			log.CtxLogger(ctx).Warn("init eci client failed", zap.Error(err))
+		}
+	case SWAS:
+		s.SWAS, err = swas_open.NewClientWithAccessKey(param.Region, param.AK, param.SK)
+		if err != nil {
+			log.CtxLogger(ctx).Warn("init swas client failed", zap.Error(err))
 		}
 	}
 
