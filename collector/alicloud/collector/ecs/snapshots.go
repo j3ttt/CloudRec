@@ -26,8 +26,6 @@ import (
 	"go.uber.org/zap"
 )
 
-const maxWorkers = 10
-
 // GetSnapshotsResource 返回ECS快照资源定义
 func GetSnapshotsResource() schema.Resource {
 	return schema.Resource{
@@ -63,7 +61,7 @@ func GetSnapshotsDetail(ctx context.Context, service schema.ServiceInterface, re
 			Snapshot: snapshot,
 		}
 	}
-	
+
 	return nil
 }
 
