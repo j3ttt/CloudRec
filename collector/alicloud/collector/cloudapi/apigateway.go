@@ -39,8 +39,8 @@ func GetAPIGatewayResource() schema.Resource {
 		Desc:               "https://api.aliyun.com/product/CloudAPI",
 		ResourceDetailFunc: GetAPIGatewayDetail,
 		RowField: schema.RowField{
-			ResourceId:   "$.Api.ApiId",
-			ResourceName: "$.Api.ApiName",
+			ResourceId:   "$.ApiSummary.ApiId",
+			ResourceName: "$.ApiSummary.ApiName",
 		},
 		Dimension: schema.Regional,
 	}

@@ -17,8 +17,6 @@ package ecs
 
 import (
 	"context"
-	"sync"
-
 	"github.com/aliyun/alibaba-cloud-sdk-go/sdk/requests"
 	"github.com/aliyun/alibaba-cloud-sdk-go/services/ecs"
 	"github.com/cloudrec/alicloud/collector"
@@ -37,8 +35,8 @@ func GetImagesResource() schema.Resource {
 		Desc:               "https://www.alibabacloud.com/help/product/ecs.html",
 		ResourceDetailFunc: GetImagesDetail,
 		RowField: schema.RowField{
-			ResourceId:   "$.ImageId",
-			ResourceName: "$.ImageName",
+			ResourceId:   "$.Image.ImageId",
+			ResourceName: "$.Image.ImageName",
 		},
 		Dimension: schema.Regional,
 	}
@@ -59,37 +57,19 @@ func GetImagesDetail(ctx context.Context, service schema.ServiceInterface, res c
 		return err
 	}
 
-	var wg sync.WaitGroup
-	tasks := make(chan ecs.Image, len(images))
-
-	// 启动工作协程
-	for i := 0; i < maxWorkers; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			for image := range tasks {
-				detail := &ImageDetail{
-					Image: image,
-				}
-				res <- detail
-			}
-		}()
-	}
-
-	// 添加任务
 	for _, image := range images {
-		tasks <- image
+		res <- &ImageDetail{
+			Image: image,
+		}
 	}
-	close(tasks)
-
-	wg.Wait()
+	
 	return nil
 }
 
 // listImages 获取ECS镜像列表
 func listImages(ctx context.Context, c *ecs.Client) ([]ecs.Image, error) {
 	var images []ecs.Image
-	
+
 	req := ecs.CreateDescribeImagesRequest()
 	req.PageSize = requests.NewInteger(constant.DefaultPageSize)
 	req.PageNumber = requests.NewInteger(constant.DefaultPage)

@@ -24,7 +24,6 @@ import (
 	"github.com/core-sdk/log"
 	"github.com/core-sdk/schema"
 	"go.uber.org/zap"
-	"strconv"
 )
 
 func GetVPNConnectionResource() schema.Resource {
@@ -86,6 +85,7 @@ func GetVpnConnectionDetail(ctx context.Context, service schema.ServiceInterface
 	request.PageSize = requests.NewInteger(50)
 	request.PageNumber = requests.NewInteger(1)
 
+	count := 0
 	for {
 		response, err := cli.DescribeVpnConnections(request)
 		if err != nil {
@@ -100,12 +100,12 @@ func GetVpnConnectionDetail(ctx context.Context, service schema.ServiceInterface
 			res <- detail
 		}
 
-		currentCount := response.PageNumber * response.PageSize
-		if currentCount >= response.TotalCount {
+		count += len(response.VpnConnections.VpnConnection)
+		if count >= response.TotalCount {
 			break
 		}
 
-		request.PageNumber = requests.Integer(strconv.Itoa(response.PageNumber + 1))
+		request.PageNumber = requests.NewInteger(response.PageNumber + 1)
 	}
 
 	return nil

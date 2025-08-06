@@ -17,8 +17,6 @@ package ecs
 
 import (
 	"context"
-	"sync"
-
 	"github.com/aliyun/alibaba-cloud-sdk-go/sdk/requests"
 	"github.com/aliyun/alibaba-cloud-sdk-go/services/ecs"
 	"github.com/cloudrec/alicloud/collector"
@@ -39,8 +37,8 @@ func GetSnapshotsResource() schema.Resource {
 		Desc:               "https://www.alibabacloud.com/help/product/ecs.html",
 		ResourceDetailFunc: GetSnapshotsDetail,
 		RowField: schema.RowField{
-			ResourceId:   "$.SnapshotId",
-			ResourceName: "$.SnapshotName",
+			ResourceId:   "$.Snapshot.SnapshotId",
+			ResourceName: "$.Snapshot.SnapshotName",
 		},
 		Dimension: schema.Regional,
 	}
@@ -60,30 +58,12 @@ func GetSnapshotsDetail(ctx context.Context, service schema.ServiceInterface, re
 		return err
 	}
 
-	var wg sync.WaitGroup
-	tasks := make(chan ecs.Snapshot, len(snapshots))
-
-	// 启动工作协程
-	for i := 0; i < maxWorkers; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			for snapshot := range tasks {
-				detail := &SnapshotDetail{
-					Snapshot: snapshot,
-				}
-				res <- detail
-			}
-		}()
-	}
-
-	// 添加任务
 	for _, snapshot := range snapshots {
-		tasks <- snapshot
+		res <- &SnapshotDetail{
+			Snapshot: snapshot,
+		}
 	}
-	close(tasks)
-
-	wg.Wait()
+	
 	return nil
 }
 
