@@ -90,4 +90,5 @@ const (
 	EfloCluster          = "Eflo Cluster"
 	EfloNode             = "Eflo Node"
 	SWAS                 = "SWAS"
+
 )

@@ -173,6 +173,7 @@ type Services struct {
 	ECI             *eci.Client
 	Eflo            *eflo.Client
 	SWAS            *swas_open.Client
+
 }
 
 // Clone creates a new instance of Services with copied configuration
@@ -457,6 +458,7 @@ func (s *Services) InitServices(cloudAccountParam schema.CloudAccountParam) (err
 		if err != nil {
 			log.CtxLogger(ctx).Warn("init swas client failed", zap.Error(err))
 		}
+
 	}
 
 	return nil

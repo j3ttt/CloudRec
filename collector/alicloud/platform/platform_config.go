@@ -190,6 +190,7 @@ func GetPlatformConfig() *schema.Platform {
 			eci.GetECIImageCacheResource(),
 			swas.GetInstanceResource(),
 			vpc.GetVPNConnectionResource(),
+
 		},
 
 		Service:        &collector.Services{},
