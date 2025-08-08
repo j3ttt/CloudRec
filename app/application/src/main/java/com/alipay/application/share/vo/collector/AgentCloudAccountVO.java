@@ -17,8 +17,10 @@
 package com.alipay.application.share.vo.collector;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.serializer.SerializerFeature;
 import com.alipay.application.service.account.utils.AESEncryptionUtils;
 import com.alipay.application.service.account.utils.PlatformUtils;
+import com.alipay.application.service.collector.domain.CollectRecordInfo;
 import com.alipay.application.service.common.utils.SpringUtils;
 import com.alipay.dao.mapper.CollectorRecordMapper;
 import com.alipay.dao.po.AgentRegistryPO;
@@ -28,8 +30,6 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.Date;
@@ -38,8 +38,6 @@ import java.util.Map;
 
 @Data
 public class AgentCloudAccountVO {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(AgentCloudAccountVO.class);
 
     /**
      * 云账号id
@@ -67,9 +65,19 @@ public class AgentCloudAccountVO {
     private Long collectRecordId;
 
     /**
+     * 采集记录信息
+     */
+    private CollectRecordInfo collectRecordInfo;
+
+    /**
      * 采集任务参数
      */
     private CollectorTask collectorTask;
+
+    /**
+     * 代理配置
+     */
+    private String proxyConfig;
 
 
     @Getter
@@ -78,6 +86,25 @@ public class AgentCloudAccountVO {
         private Long taskId;
         private String taskType;
         private String paramJson;
+    }
+
+    private static final CollectorRecordMapper collectorRecordMapper = SpringUtils.getBean(CollectorRecordMapper.class);
+
+    private static CollectRecordInfo initCollectRecordInfo(CloudAccountPO cloudAccountPO, AgentRegistryPO agentRegistryPO) {
+        CollectorRecordPO collectorRecordPO = new CollectorRecordPO();
+        collectorRecordPO.setStartTime(new Date());
+        collectorRecordPO.setRegistryValue(agentRegistryPO.getRegistryValue());
+        collectorRecordPO.setPlatform(cloudAccountPO.getPlatform());
+        collectorRecordPO.setCloudAccountId(cloudAccountPO.getCloudAccountId());
+        CollectRecordInfo collectRecordInfo = new CollectRecordInfo();
+        collectRecordInfo.setPlatform(cloudAccountPO.getPlatform());
+        collectRecordInfo.setCloudAccountId(cloudAccountPO.getCloudAccountId());
+        collectorRecordPO.setCollectRecordInfo(JSON.toJSONString(collectRecordInfo, SerializerFeature.WriteMapNullValue));
+        collectorRecordMapper.insertSelective(collectorRecordPO);
+
+        // set collect record id
+        collectRecordInfo.setCollectRecordId(collectorRecordPO.getId());
+        return collectRecordInfo;
     }
 
 
@@ -91,6 +118,7 @@ public class AgentCloudAccountVO {
         AgentCloudAccountVO agentCloudAccountVO = new AgentCloudAccountVO();
         agentCloudAccountVO.setCloudAccountId(cloudAccountPO.getCloudAccountId());
         agentCloudAccountVO.setPlatform(cloudAccountPO.getPlatform());
+        agentCloudAccountVO.setProxyConfig(cloudAccountPO.getProxyConfig());
 
         Map<String, String> accountCredentialsInfo = PlatformUtils.getAccountCredentialsInfo(cloudAccountPO.getPlatform(), PlatformUtils.decryptCredentialsJson(cloudAccountPO.getCredentialsJson()));
         agentCloudAccountVO.setCredentialJson(AESEncryptionUtils.encrypt(JSON.toJSONString(accountCredentialsInfo), agentRegistryPO.getSecretKey()));
@@ -99,16 +127,21 @@ public class AgentCloudAccountVO {
             agentCloudAccountVO.setResourceTypeList(Arrays.asList(cloudAccountPO.getResourceTypeList().split(",")));
         }
 
-        // init collector record
-        CollectorRecordMapper collectorRecordMapper = SpringUtils.getBean(CollectorRecordMapper.class);
-        CollectorRecordPO collectorRecordPO = new CollectorRecordPO();
-        collectorRecordPO.setCloudAccountId(cloudAccountPO.getCloudAccountId());
-        collectorRecordPO.setPlatform(cloudAccountPO.getPlatform());
-        collectorRecordPO.setStartTime(new Date());
-        collectorRecordPO.setRegistryValue(agentRegistryPO.getRegistryValue());
-        collectorRecordMapper.insertSelective(collectorRecordPO);
+        // set last collect record info
+        CollectorRecordPO lastOneRecord = collectorRecordMapper.findLastOne(cloudAccountPO.getCloudAccountId());
+        // Do not modify the location of the record initialization code
+        CollectRecordInfo currentRecord = initCollectRecordInfo(cloudAccountPO, agentRegistryPO);
+        agentCloudAccountVO.setCollectRecordId(currentRecord.getCollectRecordId());
 
-        agentCloudAccountVO.setCollectRecordId(collectorRecordPO.getId());
+        if (lastOneRecord != null && StringUtils.isNoneEmpty(lastOneRecord.getCollectRecordInfo())) {
+            // use last one collect record info
+            CollectRecordInfo info = JSON.parseObject(lastOneRecord.getCollectRecordInfo(), CollectRecordInfo.class);
+            info.setCollectRecordId(currentRecord.getCollectRecordId());
+            agentCloudAccountVO.setCollectRecordInfo(info);
+        } else {
+            // use current collect record info
+            agentCloudAccountVO.setCollectRecordInfo(currentRecord);
+        }
 
         return agentCloudAccountVO;
     }

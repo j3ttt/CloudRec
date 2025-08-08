@@ -25,7 +25,6 @@ import (
 	"github.com/cloudrec/alicloud/collector/cas"
 	"github.com/cloudrec/alicloud/collector/cdn"
 	"github.com/cloudrec/alicloud/collector/cen"
-	"github.com/cloudrec/alicloud/collector/cloudapi"
 	"github.com/cloudrec/alicloud/collector/cloudcenter"
 	"github.com/cloudrec/alicloud/collector/cloudfw"
 	"github.com/cloudrec/alicloud/collector/db/AnalyticDB/adbmysql"
@@ -62,6 +61,7 @@ import (
 	"github.com/cloudrec/alicloud/collector/resourcecenter"
 	"github.com/cloudrec/alicloud/collector/rocketmq"
 	"github.com/cloudrec/alicloud/collector/tablestore"
+	"github.com/cloudrec/alicloud/collector/test"
 	"github.com/cloudrec/alicloud/collector/vpc"
 	"github.com/cloudrec/alicloud/collector/vpc/eip"
 	"github.com/cloudrec/alicloud/collector/vpc/nat"
@@ -171,7 +171,7 @@ func GetPlatformConfig() *schema.Platform {
 			ens.GetLoadBalancerResource(),
 			ens.GetNetworkResource(),
 			ens.GetNatGatewayResource(),
-			cloudapi.GetCloudAPIResource(),
+			// cloudapi.GetCloudAPIResource(),
 			kms.GetKMSResource(),
 			ack.GetClusterResource(),
 			mse.GetMSEResource(),
@@ -208,12 +208,12 @@ func GetPlatformConfigTest() *schema.Platform {
 	}
 
 	return schema.GetInstance(schema.PlatformConfig{
-		Name:      string(constant.AlibabaCloud),
+		Name: string(constant.AlibabaCloud),
 		Resources: []schema.Resource{
-			//test.TestBlockResource(),
-			//test.TestAutoExitResource(),
-			//test.TestTimeOutResource(),
-			//test.TestBlockResource2(),
+			test.TestBlockResource(),
+			test.TestAutoExitResource(),
+			test.TestTimeOutResource(),
+			test.TestBlockResource2(),
 		},
 
 		Service:              &collector.Services{},

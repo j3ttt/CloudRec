@@ -18,11 +18,13 @@ package com.alipay.api.web.openapi;
 
 
 import com.alipay.api.config.filter.annotation.aop.OpenApi;
+import com.alipay.application.service.account.CloudAccountService;
 import com.alipay.application.service.common.Platform;
 import com.alipay.application.service.resource.IQueryResource;
 import com.alipay.application.service.system.OpenApiService;
 import com.alipay.application.service.system.TenantService;
 import com.alipay.application.service.system.utils.DigestSignUtils;
+import com.alipay.application.share.request.account.CreateCollectTaskRequest;
 import com.alipay.application.share.request.openapi.QueryResourceRequest;
 import com.alipay.application.share.vo.ApiResponse;
 import com.alipay.application.share.vo.ListScrollPageVO;
@@ -61,6 +63,8 @@ public class OpenApiController {
     private IQueryResource iQueryResource;
     @Resource
     private TenantService tenantService;
+    @Resource
+    private CloudAccountService cloudAccountService;
 
     /**
      * 查询扫描结果
@@ -140,5 +144,12 @@ public class OpenApiController {
         TenantDTO tenantDTO = new TenantDTO();
         ListVO<TenantVO> list = tenantService.findList(tenantDTO);
         return new ApiResponse<>(list);
+    }
+
+    @OpenApi
+    @PostMapping("/createCollectTask")
+    public ApiResponse<String> createCollectTask(@RequestBody CreateCollectTaskRequest request) {
+        cloudAccountService.createCollectTask(request);
+        return ApiResponse.SUCCESS;
     }
 }

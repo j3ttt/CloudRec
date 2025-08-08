@@ -16,13 +16,13 @@
 package tablestore
 
 import (
-	"github.com/core-sdk/constant"
-	"github.com/core-sdk/log"
-	"github.com/core-sdk/schema"
 	"context"
 	tablestore "github.com/alibabacloud-go/tablestore-20201209/client"
 	util "github.com/alibabacloud-go/tea-utils/v2/service"
 	"github.com/cloudrec/alicloud/collector"
+	"github.com/core-sdk/constant"
+	"github.com/core-sdk/log"
+	"github.com/core-sdk/schema"
 	"go.uber.org/zap"
 )
 
@@ -34,8 +34,8 @@ func GetTablestoreResource() schema.Resource {
 		Desc:               "https://api.aliyun.com/product/Tablestore",
 		ResourceDetailFunc: GetInstanceDetail,
 		RowField: schema.RowField{
-			ResourceId:   "$.InstanceInfo.SPInstanceId",
-			ResourceName: "$.InstanceInfo.SPInstanceName",
+			ResourceId:   "$.InstanceInfo.InstanceName",
+			ResourceName: "$.InstanceInfo.InstanceName",
 		},
 		Regions: []string{
 			"cn-qingdao",
@@ -88,7 +88,6 @@ func GetInstanceDetail(ctx context.Context, service schema.ServiceInterface, res
 		res <- Detail{
 			InstanceInfo: describeInstanceDetail(ctx, cli, instance.InstanceName),
 		}
-
 	}
 	return nil
 }

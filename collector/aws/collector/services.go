@@ -16,8 +16,6 @@
 package collector
 
 import (
-	"github.com/core-sdk/log"
-	"github.com/core-sdk/schema"
 	"bytes"
 	"context"
 	"fmt"
@@ -38,6 +36,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/wafv2"
 	"github.com/aws/smithy-go/logging"
+	"github.com/core-sdk/log"
+	"github.com/core-sdk/schema"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 )
@@ -65,6 +66,31 @@ func (s *Services) Clone() schema.ServiceInterface {
 	// Return a new empty instance
 	// All clients will be initialized when InitServices is called
 	return &Services{}
+}
+
+// AssessCollectionTrigger determines whether asset collection should be performed for the cloud account
+// Returns true if collection should proceed, false if it should be skipped
+// This can be used to skip collection when credentials are invalid or no changes occurred
+// AssessCollectionTrigger determines whether collection should be performed for the given cloud account
+// Returns CollectRecordInfo containing collection decision and metadata
+func (s *Services) AssessCollectionTrigger(param schema.CloudAccountParam) schema.CollectRecordInfo {
+	// TODO: Implement logic to check if collection should be performed
+	// For example:
+	// - Check if credentials are valid
+	// - Check if there were recent changes in the account
+	// - Check if the last collection was recent enough
+	// - Check if the account is in maintenance mode
+
+	startTime := time.Now().Format("2006-01-02T15:04:05Z")
+	recordInfo := schema.CollectRecordInfo{
+		CloudAccountId:   param.CloudAccountId,
+		Platform:         param.Platform,
+		StartTime:        startTime,
+		EndTime:          "",   // Will be set when collection completes
+		EnableCollection: true, // Default implementation: always collect
+	}
+
+	return recordInfo
 }
 
 func (s *Services) InitServices(cloudAccountParam schema.CloudAccountParam) (err error) {

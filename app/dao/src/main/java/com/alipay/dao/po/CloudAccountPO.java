@@ -59,4 +59,8 @@ public class CloudAccountPO {
 
     private String owner;
 
+    private String proxyConfig;
+
+    private String email;
+
 }

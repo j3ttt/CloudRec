@@ -31,7 +31,6 @@ import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -97,11 +96,23 @@ public class CloudAccountApi {
         if (result.hasErrors()) {
             return new ApiResponse<>(result);
         }
-        CloudAccountDTO cloudAccountDTO = CloudAccountDTO.builder().build();
-        BeanUtils.copyProperties(request, cloudAccountDTO);
+        CloudAccountDTO cloudAccountDTO = CloudAccountDTO.builder()
+                .id(request.getId())
+                .cloudAccountId(request.getCloudAccountId())
+                .email(request.getEmail())
+                .alias(request.getAlias())
+                .platform(request.getPlatform())
+                .tenantId(request.getTenantId())
+                .site(request.getSite())
+                .owner(request.getOwner())
+                .proxyConfig(request.getProxyConfig())
+                .build();
         cloudAccountDTO.setResourceTypeList(ListUtils.setList(request.getResourceTypeList()));
-        cloudAccountDTO.setCredentialsJson(JSON.toJSONString(request.getCredentialsObj()));
-        PlatformUtils.checkCredentialsJson(cloudAccountDTO.getCredentialsJson());
+
+        if (request.getCredentialsObj() != null) {
+            cloudAccountDTO.setCredentialsJson(JSON.toJSONString(request.getCredentialsObj()));
+            PlatformUtils.checkCredentialsJson(cloudAccountDTO.getCredentialsJson());
+        }
 
         return cloudAccountService.saveCloudAccount(cloudAccountDTO);
     }
