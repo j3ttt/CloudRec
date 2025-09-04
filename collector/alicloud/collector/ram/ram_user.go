@@ -49,6 +49,7 @@ type UserDetail struct {
 	Policies             []PolicyDetail
 	AccessKeys           []AccessKeyDetail
 	ExistActiveAccessKey bool
+	CloudAccountId       string
 }
 
 type PolicyDetail struct {
@@ -84,6 +85,7 @@ func GetUserDetail(ctx context.Context, service schema.ServiceInterface, res cha
 				Policies:             listAttachedPolicies(ctx, cli, i.UserName, []ram.Group{}),
 				AccessKeys:           accessKeys,
 				ExistActiveAccessKey: existActiveAccessKey(accessKeys),
+				CloudAccountId:       log.GetCloudAccountId(ctx),
 			}
 
 			d.ConsoleLogin = d.LoginProfile.CreateDate != ""
