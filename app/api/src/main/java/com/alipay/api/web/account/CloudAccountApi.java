@@ -18,9 +18,13 @@ package com.alipay.api.web.account;
 
 import com.alibaba.fastjson.JSON;
 import com.alipay.api.config.filter.annotation.aop.AuthenticateToken;
+import com.alipay.api.config.filter.annotation.aop.RateLimit;
 import com.alipay.application.service.account.CloudAccountService;
 import com.alipay.application.service.account.utils.PlatformUtils;
-import com.alipay.application.share.request.account.*;
+import com.alipay.application.share.request.account.CreateCollectTaskRequest;
+import com.alipay.application.share.request.account.QueryCloudAccountListRequest;
+import com.alipay.application.share.request.account.SaveCloudAccountRequest;
+import com.alipay.application.share.request.account.UpdateCloudAccountStatusRequest;
 import com.alipay.application.share.vo.ApiResponse;
 import com.alipay.application.share.vo.ListVO;
 import com.alipay.application.share.vo.account.CloudAccountVO;
@@ -31,7 +35,6 @@ import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -55,6 +58,8 @@ public class CloudAccountApi {
     @Resource
     private CloudAccountService cloudAccountService;
 
+    @RateLimit(maxRequests = 10, timeWindowSeconds = 60, keyStrategy = RateLimit.KeyStrategy.IP,
+            message = "Too many requests for accounts assets query. Please try again later.")
     @AuthenticateToken
     @PostMapping("/cloudAccountList")
     public ApiResponse<ListVO<CloudAccountVO>> queryCloudAccountList(HttpServletRequest httpServletRequest,
@@ -97,11 +102,24 @@ public class CloudAccountApi {
         if (result.hasErrors()) {
             return new ApiResponse<>(result);
         }
-        CloudAccountDTO cloudAccountDTO = CloudAccountDTO.builder().build();
-        BeanUtils.copyProperties(request, cloudAccountDTO);
+        CloudAccountDTO cloudAccountDTO = CloudAccountDTO.builder()
+                .id(request.getId())
+                .cloudAccountId(request.getCloudAccountId())
+                .email(request.getEmail())
+                .alias(request.getAlias())
+                .platform(request.getPlatform())
+                .tenantId(request.getTenantId())
+                .site(request.getSite())
+                .owner(request.getOwner())
+                .proxyConfig(request.getProxyConfig())
+                .enableInverseSelection(request.getEnableInverseSelection() ? 1 : 0)
+                .build();
         cloudAccountDTO.setResourceTypeList(ListUtils.setList(request.getResourceTypeList()));
-        cloudAccountDTO.setCredentialsJson(JSON.toJSONString(request.getCredentialsObj()));
-        PlatformUtils.checkCredentialsJson(cloudAccountDTO.getCredentialsJson());
+
+        if (request.getCredentialsObj() != null) {
+            cloudAccountDTO.setCredentialsJson(JSON.toJSONString(request.getCredentialsObj()));
+            PlatformUtils.checkCredentialsJson(cloudAccountDTO.getCredentialsJson());
+        }
 
         return cloudAccountService.saveCloudAccount(cloudAccountDTO);
     }
@@ -117,15 +135,6 @@ public class CloudAccountApi {
             return new ApiResponse<>(result);
         }
         cloudAccountService.updateCloudAccountStatus(request.getCloudAccountId(), request.getAccountStatus());
-        return ApiResponse.SUCCESS;
-    }
-
-    @PostMapping("/acceptCloudAccount")
-    public ApiResponse<String> acceptCloudAccount(@RequestBody @Validated AcceptAccountRequest request, BindingResult result) {
-        if (result.hasErrors()) {
-            return new ApiResponse<>(result);
-        }
-        cloudAccountService.acceptCloudAccount(request);
         return ApiResponse.SUCCESS;
     }
 

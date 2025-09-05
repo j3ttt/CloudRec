@@ -21,12 +21,12 @@ import com.alipay.application.service.collector.AgentService;
 import com.alipay.application.service.resource.job.ClearJob;
 import com.alipay.application.service.risk.job.SubscriptionJobService;
 import com.alipay.application.service.rule.job.ScanService;
+import com.alipay.application.service.statistics.job.ParseCloudResourceDataJob;
 import com.alipay.application.service.statistics.job.StatisticsJob;
 import com.alipay.application.service.statistics.job.SyncDataJob;
+import jakarta.annotation.Resource;
 import lombok.Synchronized;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -38,29 +38,32 @@ import org.springframework.stereotype.Component;
 @Component
 @ConditionalOnLocalScheduler
 @EnableScheduling
+@Slf4j
 public class LocalRunTask {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(LocalRunTask.class);
 
-    @Autowired
+    @Resource
     private StatisticsJob statisticsJob;
 
-    @Autowired
+    @Resource
     private ClearJob clearJob;
 
-    @Autowired
+    @Resource
+    private ParseCloudResourceDataJob parseCloudResourceDataJob;
+
+    @Resource
     private SyncDataJob syncDataJob;
 
-    @Autowired
+    @Resource
     private AgentService agentService;
 
-    @Autowired
+    @Resource
     private SubscriptionJobService subscriptionJobService;
 
-    @Autowired
+    @Resource
     private LocalTaskLocksService localTaskLocksService;
 
-    @Autowired
+    @Resource
     private ScanService scanService;
 
 
@@ -73,13 +76,13 @@ public class LocalRunTask {
         boolean runStatus = Boolean.TRUE;
         String msg = null;
         try {
-            LOGGER.info("healthCheck_local start");
+            log.info("healthCheck_local start");
             localTaskLocksService.lockTask("healthCheck");
             agentService.HealthCheck();
         } catch (Exception e) {
             runStatus = Boolean.FALSE;
             msg = e.getMessage();
-            LOGGER.error("healthCheck_local error", e);
+            log.error("healthCheck_local error", e);
             throw new RuntimeException(e);
         } finally {
             //释放锁
@@ -97,11 +100,11 @@ public class LocalRunTask {
         boolean runStatus = Boolean.TRUE;
         String msg = null;
         try {
-            LOGGER.info("timeNotifyHandler_local start");
+            log.info("timeNotifyHandler_local start");
             localTaskLocksService.lockTask("timeNotifyHandler");
             subscriptionJobService.timeNotifyHandler();
         } catch (Exception e) {
-            LOGGER.error("timeNotifyHandler_local error", e);
+            log.error("timeNotifyHandler_local error", e);
             runStatus = Boolean.FALSE;
             msg = e.getMessage();
             throw new RuntimeException(e);
@@ -115,16 +118,16 @@ public class LocalRunTask {
      * 初始化采集状态
      */
     @Synchronized
-    @Scheduled(cron = "0 0 1 * * ?")
+    @Scheduled(cron = "0 0 0/1 * * ?")
     public void initCloudAccountCollectStatus_local() {
         boolean runStatus = Boolean.TRUE;
         String msg = null;
         try {
-            LOGGER.info("initCloudAccountCollectStatus_local start");
+            log.info("initCloudAccountCollectStatus_local start");
             localTaskLocksService.lockTask("initCloudAccountCollectStatus");
             agentService.initCloudAccountCollectStatus();
         } catch (Exception e) {
-            LOGGER.error("initCloudAccountCollectStatus_local error", e);
+            log.error("initCloudAccountCollectStatus_local error", e);
             runStatus = Boolean.FALSE;
             msg = e.getMessage();
             throw new RuntimeException(e);
@@ -145,11 +148,11 @@ public class LocalRunTask {
         boolean runStatus = Boolean.TRUE;
         String msg = null;
         try {
-            LOGGER.info("statisticsAllHandler_local start");
+            log.info("statisticsAllHandler_local start");
             localTaskLocksService.lockTask("statisticsAllHandler");
             statisticsJob.statisticsAll();
         } catch (Exception e) {
-            LOGGER.error("statisticsAllHandler_local error", e);
+            log.error("statisticsAllHandler_local error", e);
             runStatus = Boolean.FALSE;
             msg = e.getMessage();
             throw new RuntimeException(e);
@@ -168,11 +171,11 @@ public class LocalRunTask {
         boolean runStatus = Boolean.TRUE;
         String msg = null;
         try {
-            LOGGER.info("clearObsoleteData_local start");
+            log.info("clearObsoleteData_local start");
             localTaskLocksService.lockTask("clearObsoleteData");
             clearJob.clearObsoleteData();
         } catch (Exception e) {
-            LOGGER.error("clearObsoleteData_local error", e);
+            log.error("clearObsoleteData_local error", e);
             runStatus = Boolean.FALSE;
             msg = e.getMessage();
             throw new RuntimeException(e);
@@ -192,11 +195,11 @@ public class LocalRunTask {
         boolean runStatus = Boolean.TRUE;
         String msg = null;
         try {
-            LOGGER.info("syncCloudDataHandler start");
+            log.info("syncCloudDataHandler start");
             localTaskLocksService.lockTask("syncCloudDataHandler");
             syncDataJob.syncCloudDataHandler();
         } catch (Exception e) {
-            LOGGER.error("syncCloudDataHandler_local error", e);
+            log.error("syncCloudDataHandler_local error", e);
             runStatus = Boolean.FALSE;
             msg = e.getMessage();
             throw new RuntimeException(e);
@@ -215,18 +218,41 @@ public class LocalRunTask {
         boolean runStatus = Boolean.TRUE;
         String msg = null;
         try {
-            LOGGER.info("syncScanAll_local start");
+            log.info("syncScanAll_local start");
             localTaskLocksService.lockTask("scanAllHandler");
             clearJob.clearObsoleteData();
             scanService.scanAll();
         } catch (Exception e) {
-            LOGGER.error("syncScanAll_local error", e);
+            log.error("syncScanAll_local error", e);
             runStatus = Boolean.FALSE;
             msg = e.getMessage();
             throw new RuntimeException(e);
         } finally {
             //释放锁
             localTaskLocksService.releaseLockTask("scanAllHandler", runStatus, msg);
+        }
+    }
+
+    /**
+     * 定时刷新ram风险数据
+     */
+    @Synchronized
+    @Scheduled(cron = "0 0 0/12 * * ?")
+    public void refreshIAMData_local() {
+        boolean runStatus = Boolean.TRUE;
+        String msg = null;
+        try {
+            log.info("refreshIAMData_local start");
+            localTaskLocksService.lockTask("refreshIAMDataHandler");
+            parseCloudResourceDataJob.refreshIAMData();
+        } catch (Exception e) {
+            log.error("refreshIAMData_local error", e);
+            runStatus = Boolean.FALSE;
+            msg = e.getMessage();
+            throw new RuntimeException(e);
+        } finally {
+            //释放锁
+            localTaskLocksService.releaseLockTask("refreshIAMDataHandler", runStatus, msg);
         }
     }
 

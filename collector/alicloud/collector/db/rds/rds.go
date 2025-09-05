@@ -16,14 +16,15 @@
 package rds
 
 import (
-	"github.com/core-sdk/constant"
-	"github.com/core-sdk/log"
-	"github.com/core-sdk/schema"
 	"context"
+	das20200116 "github.com/alibabacloud-go/das-20200116/v3/client"
 	rds20140815 "github.com/alibabacloud-go/rds-20140815/v6/client"
 	util "github.com/alibabacloud-go/tea-utils/v2/service"
 	"github.com/alibabacloud-go/tea/tea"
 	"github.com/cloudrec/alicloud/collector"
+	"github.com/core-sdk/constant"
+	"github.com/core-sdk/log"
+	"github.com/core-sdk/schema"
 	"go.uber.org/zap"
 )
 
@@ -73,6 +74,7 @@ func GetRDSResource() schema.Resource {
 
 func GetInstanceDetail(ctx context.Context, service schema.ServiceInterface, res chan<- any) error {
 	cli := service.(*collector.Services).RDS
+	dasCli := service.(*collector.Services).DAS
 
 	var page int32 = 1
 	req := &rds20140815.DescribeDBInstancesRequest{}
@@ -98,6 +100,7 @@ func GetInstanceDetail(ctx context.Context, service schema.ServiceInterface, res
 				DBInstanceTDE:            describeDBInstanceTDE(ctx, cli, i.DBInstanceId),
 				SQLCollectorPolicy:       describeSQLCollectorPolicy(ctx, cli, i.DBInstanceId),
 				BackupPolicy:             describeBackupPolicy(ctx, cli, i.DBInstanceId),
+				SqlLogConfig:             describeSqlLogConfig(ctx, dasCli, i.DBInstanceId),
 			}
 		}
 		if count >= int(*bd.TotalRecordCount) || len(bd.Items.DBInstance) == 0 {
@@ -118,6 +121,7 @@ type Detail struct {
 	DBInstanceTDE            *rds20140815.DescribeDBInstanceTDEResponseBody
 	SQLCollectorPolicy       *rds20140815.DescribeSQLCollectorPolicyResponseBody
 	BackupPolicy             *rds20140815.DescribeBackupPolicyResponseBody
+	SqlLogConfig             *das20200116.DescribeSqlLogConfigResponseBodyData
 }
 
 // This interface is used to query the backup settings of the RDS instance.
@@ -211,4 +215,15 @@ func describeSQLCollectorPolicy(ctx context.Context, cli *rds20140815.Client, DB
 		return
 	}
 	return resp.Body
+}
+
+func describeSqlLogConfig(ctx context.Context, cli *das20200116.Client, InstanceId *string) (res *das20200116.DescribeSqlLogConfigResponseBodyData) {
+	request := &das20200116.DescribeSqlLogConfigRequest{}
+	request.InstanceId = InstanceId
+	resp, err := cli.DescribeSqlLogConfig(request)
+	if err != nil {
+		log.CtxLogger(ctx).Error("", zap.Error(err))
+		return
+	}
+	return resp.Body.Data
 }

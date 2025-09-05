@@ -18,9 +18,9 @@ package com.alipay.application.service.resource;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.serializer.SerializerFeature;
+import com.alipay.application.service.collector.SchedulerManager;
 import com.alipay.application.share.request.resource.DataPushRequest;
 import com.alipay.application.share.request.resource.ResourceInstance;
-import com.alipay.application.share.vo.resource.ResourceDetailConfigVO;
 import com.alipay.common.enums.Status;
 import com.alipay.dao.mapper.CloudAccountMapper;
 import com.alipay.dao.mapper.CloudResourceInstanceMapper;
@@ -33,20 +33,19 @@ import com.jayway.jsonpath.JsonPath;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
 public class SaveResourceServiceImpl implements SaveResourceService {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(SaveResourceServiceImpl.class);
 
     @Resource
     private CloudAccountMapper cloudAccountMapper;
@@ -57,11 +56,20 @@ public class SaveResourceServiceImpl implements SaveResourceService {
     @Resource
     private CloudResourceInstanceMapper cloudResourceInstanceMapper;
 
+    @Resource
+    private AsyncTaskMonitorService asyncTaskMonitorService;
+
+    private static final int MAX_RETRY_ATTEMPTS = 3;
+    private static final int RETRY_DELAY_SECONDS = 120;
 
     public void saveOrUpdateData(DataPushRequest.Data dataPushRequest) {
+        saveOrUpdateDataWithRetry(dataPushRequest, 0);
+    }
+
+    private void saveOrUpdateDataWithRetry(DataPushRequest.Data dataPushRequest, int retryCount) {
         CloudAccountPO cloudAccountPO = cloudAccountMapper.findByCloudAccountId(dataPushRequest.getCloudAccountId());
         if (cloudAccountPO == null) {
-            LOGGER.error("account account not found, cloudAccountId:{}", dataPushRequest.getCloudAccountId());
+            log.warn("account not found, cloudAccountId:{}", dataPushRequest.getCloudAccountId());
             return;
         }
 
@@ -97,10 +105,24 @@ public class SaveResourceServiceImpl implements SaveResourceService {
                 }
             }
         } catch (Exception e) {
-            LOGGER.error("save resource instance error", e);
+            log.warn("cloud account id :{} save resource instance error, retry count: {}", cloudAccountPO.getCloudAccountId(), retryCount, e);
+            if (retryCount < MAX_RETRY_ATTEMPTS) {
+                SchedulerManager.getScheduler().schedule(
+                        () -> {
+                            try {
+                                saveOrUpdateDataWithRetry(dataPushRequest, retryCount + 1);
+                            } catch (Exception error) {
+                                log.warn("cloud account id :{} save resource instance error on retry {}", cloudAccountPO.getCloudAccountId(), retryCount + 1, error);
+                            }
+                        },
+                        RETRY_DELAY_SECONDS,
+                        TimeUnit.SECONDS
+                );
+            } else {
+                log.error("cloud account id :{} save resource instance failed after {} retries", cloudAccountPO.getCloudAccountId(), MAX_RETRY_ATTEMPTS);
+            }
         }
     }
-
 
     @Override
     public void acceptResourceData(DataPushRequest dataReq) {
@@ -108,10 +130,83 @@ public class SaveResourceServiceImpl implements SaveResourceService {
         DataPushRequest.Data parseObject = JSON.parseObject(data, DataPushRequest.Data.class);
 
         try {
-            this.saveOrUpdateData(parseObject);
+            // Process data asynchronously to improve response time
+            saveOrUpdateDataAsync(parseObject);
         } catch (Exception e) {
-            LOGGER.error("error", e);
+            log.error("acceptResourceData error", e);
+            return;
         }
+
+        log.info("Resource data accepted for async processing, cloudAccountId: {}, resourceType: {}, platform: {}",
+                parseObject.getCloudAccountId(), parseObject.getResourceType(), parseObject.getPlatform());
+    }
+
+    /**
+     * Asynchronously process resource data to improve API response time
+     * Uses dedicated thread pool for resource data processing with monitoring
+     *
+     * @param dataPushRequest the data to be processed
+     * @return CompletableFuture for async operation tracking
+     */
+    @Async("resourceDataTaskExecutor")
+    public CompletableFuture<Void> saveOrUpdateDataAsync(DataPushRequest.Data dataPushRequest) {
+        String taskId = generateTaskId(dataPushRequest);
+
+        // Record task submission for monitoring
+        asyncTaskMonitorService.recordTaskSubmission(taskId,
+                dataPushRequest.getCloudAccountId(),
+                dataPushRequest.getResourceType(),
+                dataPushRequest.getPlatform());
+
+        try {
+            log.info("Starting async processing [{}] for cloudAccountId: {}, resourceType: {}, platform: {}",
+                    taskId, dataPushRequest.getCloudAccountId(), dataPushRequest.getResourceType(), dataPushRequest.getPlatform());
+
+            this.saveOrUpdateData(dataPushRequest);
+
+            // Record successful completion
+            asyncTaskMonitorService.recordTaskCompletion(taskId);
+
+            log.info("Completed async processing [{}] for cloudAccountId: {}, resourceType: {}, platform: {}",
+                    taskId, dataPushRequest.getCloudAccountId(), dataPushRequest.getResourceType(), dataPushRequest.getPlatform());
+
+            return CompletableFuture.completedFuture(null);
+        } catch (Exception e) {
+            // Record task failure
+            asyncTaskMonitorService.recordTaskFailure(taskId, e);
+
+            log.error("Async processing failed [{}] for cloudAccountId: {}, resourceType: {}, platform: {}",
+                    taskId, dataPushRequest.getCloudAccountId(), dataPushRequest.getResourceType(), dataPushRequest.getPlatform(), e);
+
+            // Return completed future even on error to prevent blocking
+            return CompletableFuture.completedFuture(null);
+        }
+    }
+
+    /**
+     * Generate unique task ID for monitoring purposes
+     *
+     * @param dataPushRequest the data request
+     * @return unique task identifier
+     */
+    private String generateTaskId(DataPushRequest.Data dataPushRequest) {
+        return String.format("%s-%s-%s-%d",
+                dataPushRequest.getCloudAccountId(),
+                dataPushRequest.getResourceType(),
+                dataPushRequest.getPlatform(),
+                System.currentTimeMillis());
+    }
+
+    @Override
+    public void refreshResourceUpdateTime(String cloudAccountId) {
+        while (true) {
+            int effectCount = cloudResourceInstanceMapper.refreshUpdateTime(new Date(), cloudAccountId);
+            if (effectCount == 0) {
+                break;
+            }
+        }
+
+        log.info("refresh resource update time success, cloudAccountId:{}", cloudAccountId);
     }
 
     public String parseCustomField(CloudResourceInstancePO resourceInstance) {
@@ -138,26 +233,10 @@ public class SaveResourceServiceImpl implements SaveResourceService {
             try {
                 result.add(JSON.toJSONString(JsonPath.read(document, po.getPath())));
             } catch (Exception e) {
-                log.error("jsonpath error:{}", po.getPath(), e);
+                log.warn("jsonpath error:{}", po.getPath(), e);
             }
         }
 
         return result;
-    }
-
-    private void getPath(Object document, List<ResourceDetailConfigVO> networkList,
-                         List<ResourceDetailConfigPO> networkConfigList) {
-        for (ResourceDetailConfigPO po : networkConfigList) {
-            ResourceDetailConfigVO vo = ResourceDetailConfigVO.build(po);
-            try {
-                Object read = JsonPath.read(document, po.getPath());
-                String value = JSON.toJSONString(read);
-                vo.setValue(value);
-            } catch (Exception e) {
-                LOGGER.info("jsonpath error:{}", po.getPath());
-                vo.setValue(e.getMessage());
-            }
-            networkList.add(vo);
-        }
     }
 }

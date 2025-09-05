@@ -16,13 +16,13 @@
 package iam
 
 import (
-	"github.com/core-sdk/constant"
-	"github.com/core-sdk/log"
-	"github.com/core-sdk/schema"
 	"context"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	"github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/cloudrec/aws/collector"
+	"github.com/core-sdk/constant"
+	"github.com/core-sdk/log"
+	"github.com/core-sdk/schema"
 	"go.uber.org/zap"
 )
 
@@ -35,8 +35,8 @@ func GetAccountSettingsResource() schema.Resource {
 		Desc:               `https://docs.aws.amazon.com/IAM/latest/APIReference/API_GetAccountSummary.html`,
 		ResourceDetailFunc: GetAccountSettingsDetail,
 		RowField: schema.RowField{
-			ResourceId:   "", // AccountID would be
-			ResourceName: "", // AccountID would be
+			ResourceId:   "$.AccountId", // AccountID would be
+			ResourceName: "$.AccountId", // AccountID would be
 		},
 		Regions:   []string{"ap-northeast-1", "cn-north-1"},
 		Dimension: schema.Regional,
@@ -47,6 +47,8 @@ type AccountSettingsDetail struct {
 	PasswordPolicy types.PasswordPolicy
 
 	AccountSummary map[string]int32
+
+	AccountId string
 
 	// todo
 	//EnabledFeatures []types.FeatureType
@@ -83,6 +85,7 @@ func describeAccountSettingsDetail(ctx context.Context, c *iam.Client) (AccountS
 	return AccountSettingsDetail{
 		PasswordPolicy: passwordPolicy,
 		AccountSummary: accountSummary,
+		AccountId:      log.GetCloudAccountId(ctx),
 	}, nil
 }
 

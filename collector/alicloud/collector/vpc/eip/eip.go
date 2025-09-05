@@ -16,14 +16,14 @@
 package eip
 
 import (
-	"github.com/core-sdk/constant"
-	"github.com/core-sdk/log"
-	"github.com/core-sdk/schema"
 	"context"
 	"github.com/aliyun/alibaba-cloud-sdk-go/sdk/requests"
 	"github.com/aliyun/alibaba-cloud-sdk-go/services/vpc"
 	"github.com/cloudrec/alicloud/collector"
 	collectorvpc "github.com/cloudrec/alicloud/collector/vpc"
+	"github.com/core-sdk/constant"
+	"github.com/core-sdk/log"
+	"github.com/core-sdk/schema"
 	"go.uber.org/zap"
 )
 
@@ -39,7 +39,7 @@ func GetEIPResource() schema.Resource {
 		Desc:               `https://api.aliyun.com/product/Vpc`,
 		ResourceDetailFunc: GetInstanceDetail,
 		RowField: schema.RowField{
-			ResourceId:   "$.EipAddress.InstanceId",
+			ResourceId:   "$.EipAddress.IpAddress",
 			ResourceName: "$.EipAddress.Name",
 			Address:      "$.EipAddress.IpAddress",
 		},

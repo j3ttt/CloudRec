@@ -16,13 +16,13 @@
 package cloudcenter
 
 import (
-	"github.com/core-sdk/constant"
-	"github.com/core-sdk/log"
-	"github.com/core-sdk/schema"
 	"context"
 	sas20181203 "github.com/alibabacloud-go/sas-20181203/v3/client"
 	"github.com/alibabacloud-go/tea/tea"
 	"github.com/cloudrec/alicloud/collector"
+	"github.com/core-sdk/constant"
+	"github.com/core-sdk/log"
+	"github.com/core-sdk/schema"
 	"go.uber.org/zap"
 )
 
@@ -50,7 +50,7 @@ func GetCloudCenterResource() schema.Resource {
 func GetSasInstanceDetail(ctx context.Context, service schema.ServiceInterface, res chan<- any) error {
 	cli := service.(*collector.Services).Sas
 
-	machineTypes := []string{"ecs", "cloud_product"}
+	machineTypes := []string{"ecs"}
 	for _, machineType := range machineTypes {
 		var page int32 = 1
 		var count = 0
